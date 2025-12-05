@@ -148,8 +148,10 @@ def test_api_download(cache_key):
                                  ['configuration', 'points', 'distances'])
                 test_result("API Download", has_required, 
                           f"Data size: {len(response.content)} bytes")
-            except:
-                test_result("API Download", False, "Invalid JSON response")
+            except json.JSONDecodeError as e:
+                test_result("API Download", False, f"Invalid JSON response: {str(e)}")
+            except Exception as e:
+                test_result("API Download", False, f"Unexpected error: {str(e)}")
         else:
             test_result("API Download", False, f"Status: {response.status_code}")
             

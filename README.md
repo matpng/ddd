@@ -1,6 +1,17 @@
 # Orion Octave Cubes – Geometry Test Harness
 
+[![GitHub Pages Demo](https://img.shields.io/badge/demo-live-success)](https://matpng.github.io/ddd/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue)](https://www.python.org/)
+[![Tests Passing](https://img.shields.io/badge/tests-48/48-success)](#testing)
+
 A sophisticated computational geometry tool for analyzing interference patterns between rotated cubes, with a focus on detecting golden ratio relationships, icosahedral symmetries, and Platonic solid signatures.
+
+## 🌐 Live Demo
+
+**Static Demo**: [https://matpng.github.io/ddd/](https://matpng.github.io/ddd/)  
+Pre-computed results for common angles (30°, 45°, 60°, 72°, 90°)
+
+**For full functionality** with custom angles and real-time computation, run locally (see Quick Start below).
 
 ## ✨ Features
 
@@ -11,12 +22,20 @@ A sophisticated computational geometry tool for analyzing interference patterns 
 - **🔬 High-Precision Calculations** - Configurable sampling for accuracy vs. speed
 - **💾 Data Export** - Download results as JSON and plots as PNG
 - **⚡ Batch Processing** - CLI tools for automated analysis
+- **🔒 Production Ready** - Environment-based configuration, LRU caching, security hardening
 
 ## 🚀 Quick Start - Web Application
 
 ```bash
-# Install dependencies
+# Clone and install
+git clone https://github.com/matpng/ddd.git
+cd ddd
 pip install -r requirements.txt
+
+# Run the web application
+python3 app.py
+# or
+./start_app.sh
 
 # Start the web application
 ./start_app.sh

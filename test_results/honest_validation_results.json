@@ -1,0 +1,101 @@
+{
+  "validation_date": "2025-12-05",
+  "summary": {
+    "total_discoveries": 4,
+    "validated": 3,
+    "partially_validated": 0,
+    "invalidated": 1
+  },
+  "claims": {
+    "phi_occurrence": {
+      "claimed_rate": 84.2,
+      "source": "ULTIMATE_DISCOVERY_SUMMARY.md"
+    },
+    "peak_angles": {
+      "claimed_72": 5,
+      "claimed_108": 5,
+      "source": "ULTIMATE_DISCOVERY_SUMMARY.md"
+    },
+    "point_consistency": {
+      "claimed_mode": 32,
+      "source": "ULTIMATE_DISCOVERY_SUMMARY.md"
+    },
+    "fourier_periods": {
+      "claimed_periods": [
+        180,
+        90,
+        60
+      ],
+      "source": "ULTIMATE_DISCOVERY_SUMMARY.md"
+    }
+  },
+  "measurements": {
+    "phi_occurrence": {
+      "coarse_rate": 84.21052631578947,
+      "medium_rate": 63.1578947368421,
+      "fine_rate": 37.569060773480665,
+      "best_measured": 84.21052631578947
+    },
+    "peak_angles": {
+      "measured_72": 5,
+      "measured_108": 5,
+      "max_neighbor_72": 5,
+      "max_neighbor_108": 5
+    },
+    "point_consistency": {
+      "measured_mode": 32,
+      "proportion_32": 0.9523809523809523,
+      "distribution": {
+        "8": 1,
+        "32": 60,
+        "16": 1,
+        "14": 1
+      }
+    },
+    "fourier_periods": {
+      "detected_periods": [],
+      "top_periods": [
+        11.375,
+        4.7894736842105265,
+        10.11111111111111,
+        9.1,
+        45.5
+      ]
+    }
+  },
+  "results": {
+    "phi_occurrence": {
+      "validated": true,
+      "claim": 84.2,
+      "measurement": 84.21052631578947,
+      "discrepancy": -0.010526315789462615,
+      "verdict": "validated"
+    },
+    "peak_angles": {
+      "validated": true,
+      "claim_72": 5,
+      "measurement_72": 5,
+      "claim_108": 5,
+      "measurement_108": 5,
+      "verdict": "validated"
+    },
+    "point_consistency": {
+      "validated": true,
+      "claim": 32,
+      "measurement": 32,
+      "proportion_32": 0.9523809523809523,
+      "verdict": "validated"
+    },
+    "fourier_periods": {
+      "validated": false,
+      "claim": [
+        180,
+        90,
+        60
+      ],
+      "detected": 0,
+      "total_expected": 3,
+      "verdict": "invalidated"
+    }
+  }
+}

@@ -1,0 +1,462 @@
+[
+  {
+    "configuration": {
+      "side": 2.0,
+      "angle": 36,
+      "axis": "z"
+    },
+    "discoveries": [
+      {
+        "type": "topology",
+        "description": "Topological properties of point cloud",
+        "data": {
+          "convex_hull_vertices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "num_faces": 28,
+          "num_vertices": 16,
+          "num_edges": 28,
+          "surface_area": 28.439306719894894,
+          "volume": 11.174417976,
+          "euler_characteristic": 16,
+          "centroid": [
+            0.0,
+            -3.469446951953614e-18,
+            0.0
+          ],
+          "mean_distance_from_center": 1.604590698657295,
+          "std_distance_from_center": 0.12878640461046365,
+          "point_cloud_radius": 1.7320508078265497
+        }
+      },
+      {
+        "type": "symmetry",
+        "description": "Symmetry group: Low symmetry",
+        "data": {
+          "reflection_planes": [
+            "xy"
+          ],
+          "rotation_axes": [
+            {
+              "axis": "z",
+              "order": 2,
+              "angle_deg": 180.0
+            }
+          ],
+          "inversion_center": [
+            0.0,
+            -3.469446951953614e-18,
+            0.0
+          ],
+          "classification": "Low symmetry"
+        }
+      },
+      {
+        "type": "fractal",
+        "description": "Fractal dimension: 0.442",
+        "data": {
+          "fractal_dimension": 0.4415037499278846,
+          "scales": [
+            2,
+            4,
+            8,
+            16,
+            32
+          ],
+          "box_counts": [
+            8,
+            24,
+            32,
+            32,
+            32
+          ],
+          "fit_quality": 0.805297164243782
+        }
+      },
+      {
+        "type": "entropy",
+        "description": "Information content (entropy): 11.42 bits",
+        "data": {
+          "distance_entropy": 4.877504525986687,
+          "distance_entropy_normalized": 0.9509135116688804,
+          "direction_entropy": 6.543303390418865,
+          "direction_entropy_normalized": 0.7005790658734302,
+          "total_entropy": 11.420807916405552
+        }
+      }
+    ],
+    "metrics": {
+      "unique_points": 32,
+      "distance_diversity": 35,
+      "direction_diversity": 163,
+      "phi_candidates": 0,
+      "symmetry_score": 2,
+      "entropy_score": 11.420807916405552,
+      "fractal_dimension": 0.4415037499278846
+    },
+    "recommendations": [
+      "\ud83d\udcca High information content - rich geometric structure detected"
+    ],
+    "potential_applications": []
+  },
+  {
+    "configuration": {
+      "side": 2.0,
+      "angle": 54,
+      "axis": "z"
+    },
+    "discoveries": [
+      {
+        "type": "topology",
+        "description": "Topological properties of point cloud",
+        "data": {
+          "convex_hull_vertices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "num_faces": 28,
+          "num_vertices": 16,
+          "num_edges": 28,
+          "surface_area": 28.439306719894898,
+          "volume": 11.174417976000003,
+          "euler_characteristic": 16,
+          "centroid": [
+            0.0,
+            1.734723475976807e-18,
+            0.0
+          ],
+          "mean_distance_from_center": 1.604590698657295,
+          "std_distance_from_center": 0.12878640461046365,
+          "point_cloud_radius": 1.7320508078265497
+        }
+      },
+      {
+        "type": "symmetry",
+        "description": "Symmetry group: Low symmetry",
+        "data": {
+          "reflection_planes": [
+            "xy"
+          ],
+          "rotation_axes": [
+            {
+              "axis": "z",
+              "order": 2,
+              "angle_deg": 180.0
+            }
+          ],
+          "inversion_center": [
+            0.0,
+            1.734723475976807e-18,
+            0.0
+          ],
+          "classification": "Low symmetry"
+        }
+      },
+      {
+        "type": "fractal",
+        "description": "Fractal dimension: 0.442",
+        "data": {
+          "fractal_dimension": 0.4415037499278846,
+          "scales": [
+            2,
+            4,
+            8,
+            16,
+            32
+          ],
+          "box_counts": [
+            8,
+            24,
+            32,
+            32,
+            32
+          ],
+          "fit_quality": 0.805297164243782
+        }
+      },
+      {
+        "type": "entropy",
+        "description": "Information content (entropy): 11.38 bits",
+        "data": {
+          "distance_entropy": 4.877504525986687,
+          "distance_entropy_normalized": 0.9509135116688804,
+          "direction_entropy": 6.50649357879603,
+          "direction_entropy_normalized": 0.6966379092583384,
+          "total_entropy": 11.383998104782716
+        }
+      }
+    ],
+    "metrics": {
+      "unique_points": 32,
+      "distance_diversity": 35,
+      "direction_diversity": 163,
+      "phi_candidates": 0,
+      "symmetry_score": 2,
+      "entropy_score": 11.383998104782716,
+      "fractal_dimension": 0.4415037499278846
+    },
+    "recommendations": [
+      "\ud83d\udcca High information content - rich geometric structure detected"
+    ],
+    "potential_applications": []
+  },
+  {
+    "configuration": {
+      "side": 2.0,
+      "angle": 60,
+      "axis": "z"
+    },
+    "discoveries": [
+      {
+        "type": "topology",
+        "description": "Topological properties of point cloud",
+        "data": {
+          "convex_hull_vertices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "num_faces": 28,
+          "num_vertices": 16,
+          "num_edges": 28,
+          "surface_area": 28.09831819301663,
+          "volume": 10.928203232000001,
+          "euler_characteristic": 16,
+          "centroid": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean_distance_from_center": 1.6077501472624354,
+          "std_distance_from_center": 0.1281483117963509,
+          "point_cloud_radius": 1.7320508077844385
+        }
+      },
+      {
+        "type": "symmetry",
+        "description": "Symmetry group: Low symmetry",
+        "data": {
+          "reflection_planes": [
+            "xy"
+          ],
+          "rotation_axes": [
+            {
+              "axis": "z",
+              "order": 2,
+              "angle_deg": 180.0
+            }
+          ],
+          "inversion_center": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "classification": "Low symmetry"
+        }
+      },
+      {
+        "type": "fractal",
+        "description": "Fractal dimension: 0.442",
+        "data": {
+          "fractal_dimension": 0.4415037499278846,
+          "scales": [
+            2,
+            4,
+            8,
+            16,
+            32
+          ],
+          "box_counts": [
+            8,
+            24,
+            32,
+            32,
+            32
+          ],
+          "fit_quality": 0.805297164243782
+        }
+      },
+      {
+        "type": "entropy",
+        "description": "Information content (entropy): 11.36 bits",
+        "data": {
+          "distance_entropy": 4.742592788756704,
+          "distance_entropy_normalized": 0.9485185577513408,
+          "direction_entropy": 6.61955445802758,
+          "direction_entropy_normalized": 0.7087431228534851,
+          "total_entropy": 11.362147246784284
+        }
+      }
+    ],
+    "metrics": {
+      "unique_points": 32,
+      "distance_diversity": 32,
+      "direction_diversity": 161,
+      "phi_candidates": 1,
+      "symmetry_score": 2,
+      "entropy_score": 11.362147246784284,
+      "fractal_dimension": 0.4415037499278846
+    },
+    "recommendations": [
+      "\ud83c\udf1f Golden ratio detected! Explore neighboring angles for phi optimization",
+      "\ud83d\udcca High information content - rich geometric structure detected"
+    ],
+    "potential_applications": [
+      "\ud83d\udce1 Antenna Design: Logarithmic spiral arrays with phi-based spacing",
+      "\ud83c\udfa8 Art & Design: Sacred geometry patterns for aesthetic optimization",
+      "\ud83d\udd2c Materials Science: Self-similar lattice structures for metamaterials",
+      "\ud83c\udfd7\ufe0f Architecture: Bio-inspired structural designs using golden ratio proportions"
+    ]
+  },
+  {
+    "configuration": {
+      "side": 2.0,
+      "angle": 60,
+      "axis": "body"
+    },
+    "discoveries": [
+      {
+        "type": "topology",
+        "description": "Topological properties of point cloud",
+        "data": {
+          "convex_hull_vertices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "num_faces": 24,
+          "num_vertices": 14,
+          "num_edges": 24,
+          "surface_area": 29.202252322851088,
+          "volume": 13.333333336000003,
+          "euler_characteristic": 14,
+          "centroid": [
+            0.0,
+            1.1102230246251566e-17,
+            0.0
+          ],
+          "mean_distance_from_center": 1.6366996340678779,
+          "std_distance_from_center": 0.14565132351638754,
+          "point_cloud_radius": 1.7320508077613275
+        }
+      },
+      {
+        "type": "symmetry",
+        "description": "Symmetry group: Low symmetry",
+        "data": {
+          "reflection_planes": [],
+          "rotation_axes": [
+            {
+              "axis": "body-diagonal",
+              "order": 2,
+              "angle_deg": 180.0
+            }
+          ],
+          "inversion_center": [
+            0.0,
+            1.1102230246251566e-17,
+            0.0
+          ],
+          "classification": "Low symmetry"
+        }
+      },
+      {
+        "type": "fractal",
+        "description": "Fractal dimension: 0.264",
+        "data": {
+          "fractal_dimension": 0.26438561897747265,
+          "scales": [
+            2,
+            4,
+            8,
+            16,
+            32
+          ],
+          "box_counts": [
+            8,
+            20,
+            20,
+            20,
+            20
+          ],
+          "fit_quality": 0.7071067811865474
+        }
+      },
+      {
+        "type": "entropy",
+        "description": "Information content (entropy): 9.19 bits",
+        "data": {
+          "distance_entropy": 3.294349027064508,
+          "distance_entropy_normalized": 0.9189354216123076,
+          "direction_entropy": 5.8979503657552845,
+          "direction_entropy_normalized": 0.631482343285352,
+          "total_entropy": 9.192299392819793
+        }
+      }
+    ],
+    "metrics": {
+      "unique_points": 20,
+      "distance_diversity": 12,
+      "direction_diversity": 61,
+      "phi_candidates": 0,
+      "symmetry_score": 1,
+      "entropy_score": 9.192299392819793,
+      "fractal_dimension": 0.26438561897747265
+    },
+    "recommendations": [],
+    "potential_applications": []
+  }
+]

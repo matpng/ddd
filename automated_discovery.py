@@ -13,7 +13,6 @@ import sys
 
 from auto_explorer import ParameterSpaceExplorer, ExplorationConfig
 from ml_discovery import MLPatternDiscovery
-from comprehensive_tests import run_test_suite
 
 logging.basicConfig(
     level=logging.INFO,
@@ -118,7 +117,14 @@ class AutomatedDiscoverySystem:
         
         try:
             logger.info("Running comprehensive test suite...")
-            success = run_test_suite()
+            import subprocess
+            result = subprocess.run(['python3', 'comprehensive_tests.py'], 
+                                  capture_output=True, text=True, timeout=60)
+            success = result.returncode == 0
+            if success:
+                logger.info("✓ All tests passed")
+            else:
+                logger.error(f"Tests failed: {result.stderr}")
             return success
         except Exception as e:
             logger.error(f"Testing failed with error: {e}")

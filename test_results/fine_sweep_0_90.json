@@ -1,0 +1,78 @@
+{
+  "0": {
+    "unique_points": 8,
+    "phi_count": 0
+  },
+  "5": {
+    "unique_points": 32,
+    "phi_count": 0
+  },
+  "10": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "15": {
+    "unique_points": 32,
+    "phi_count": 0
+  },
+  "20": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "25": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "30": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "35": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "40": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "45": {
+    "unique_points": 32,
+    "phi_count": 0
+  },
+  "50": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "55": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "60": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "65": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "70": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "75": {
+    "unique_points": 32,
+    "phi_count": 0
+  },
+  "80": {
+    "unique_points": 32,
+    "phi_count": 1
+  },
+  "85": {
+    "unique_points": 32,
+    "phi_count": 0
+  },
+  "90": {
+    "unique_points": 16,
+    "phi_count": 0
+  }
+}
