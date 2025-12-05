@@ -1,0 +1,21 @@
+# Jekyll configuration for GitHub Pages
+theme: jekyll-theme-minimal
+title: Orion Octave Cubes
+description: Geometric Analysis of Rotated Cube Interference Patterns
+show_downloads: true
+google_analytics: 
+exclude:
+  - __pycache__
+  - "*.py"
+  - "*.pyc"
+  - requirements.txt
+  - .git
+  - .gitignore
+  - venv
+  - env
+  - test_results
+  - "*.sh"
+  - "*.backup"
+  - "*.md"
+include:
+  - README.md

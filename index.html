@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orion Octave Cubes - Geometry Analysis Dashboard</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" transform="rotate(0 12.5 12.5)"/>
+                    <rect x="20" y="20" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" transform="rotate(30 27.5 27.5)"/>
+                </svg>
+                <h1>Orion Octave Cubes</h1>
+            </div>
+            <p class="subtitle">Interactive Geometric Analysis Dashboard</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Control Panel -->
+        <section class="card control-panel">
+            <h2>Analysis Parameters</h2>
+            <form id="analysisForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="side">Cube Side Length</label>
+                        <input type="number" id="side" name="side" value="2.0" min="0.1" max="100" step="0.1" required>
+                        <small>Length of cube edges (0.1 - 100)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="angle">Rotation Angle (degrees)</label>
+                        <input type="number" id="angle" name="angle" value="30" min="0" max="360" step="1" required>
+                        <small>Rotation of Cube B around z-axis (0 - 360°)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxDistancePairs">Max Distance Pairs</label>
+                        <input type="number" id="maxDistancePairs" name="max_distance_pairs" value="20000" min="1000" max="100000" step="1000">
+                        <small>Sample size for distance analysis</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxDirectionPairs">Max Direction Pairs</label>
+                        <input type="number" id="maxDirectionPairs" name="max_direction_pairs" value="8000" min="1000" max="100000" step="1000">
+                        <small>Sample size for direction analysis</small>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" id="runAnalysisBtn" class="btn btn-primary">
+                        <span class="btn-icon">▶</span> Run Analysis
+                    </button>
+                    <button type="button" id="resetBtn" class="btn btn-secondary">
+                        <span class="btn-icon">↻</span> Reset
+                    </button>
+                    <button type="button" id="helpBtn" class="btn btn-secondary" onclick="showHelp()">
+                        <span class="btn-icon">?</span> Help
+                    </button>
+                </div>
+            </form>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
+                <p>Running geometric analysis...</p>
+            </div>
+
+            <!-- Error Display -->
+            <div id="errorDisplay" class="error-display" style="display: none;">
+                <strong>Error:</strong> <span id="errorMessage"></span>
+            </div>
+        </section>
+
+        <!-- Deployment Notice -->
+        <section class="card info-notice">
+            <h3>ℹ️ Deployment Mode</h3>
+            <p>This is a <strong>static GitHub Pages deployment</strong>. For full functionality including server-side computation:</p>
+            <ul>
+                <li>Clone the repository: <code>git clone https://github.com/matpng/ddd.git</code></li>
+                <li>Install dependencies: <code>pip install -r requirements.txt</code></li>
+                <li>Run locally: <code>python3 app.py</code></li>
+                <li>Access at: <code>http://localhost:5000</code></li>
+            </ul>
+            <p><strong>Static version features:</strong> Interactive demo with pre-computed results for common angles (30°, 45°, 60°, 72°, 90°)</p>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="results-section" style="display: none;">
+            <!-- Summary Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Configuration</h3>
+                    <div class="stat-value" id="statSide">-</div>
+                    <div class="stat-label" id="statAngle">-</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Points Generated</h3>
+                    <div class="stat-value" id="statPoints">-</div>
+                    <div class="stat-label" id="statPointBreakdown">-</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Distance Range</h3>
+                    <div class="stat-value" id="statDistRange">-</div>
+                    <div class="stat-label" id="statDistMean">-</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Golden Ratio φ</h3>
+                    <div class="stat-value" id="statPhi">-</div>
+                    <div class="stat-label" id="statPhiCandidates">-</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Directions</h3>
+                    <div class="stat-value" id="statDirections">-</div>
+                    <div class="stat-label">Unique direction vectors</div>
+                </div>
+
+                <div class="stat-card icosahedral-card">
+                    <h3>Icosahedral Match</h3>
+                    <div class="stat-value" id="statIcoAngle">-</div>
+                    <div class="stat-label" id="statIcoQuality">-</div>
+                </div>
+            </div>
+
+            <!-- Special Angles -->
+            <div class="card">
+                <h2>Special Angle Detection</h2>
+                <div id="specialAnglesDisplay" class="special-angles-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Visualizations -->
+            <div class="card">
+                <h2>Visualizations</h2>
+                
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="3d">3D Geometry</button>
+                    <button class="tab-btn" data-tab="distances">Distance Spectrum</button>
+                    <button class="tab-btn" data-tab="angles">Angle Distribution</button>
+                    <button class="tab-btn" data-tab="summary">Summary</button>
+                </div>
+
+                <div class="tab-content">
+                    <div id="tab-3d" class="tab-pane active">
+                        <div class="plot-container">
+                            <p class="text-muted">Server-side computation required. Please run locally for full visualizations.</p>
+                            <p class="text-muted">See "Deployment Mode" section above for instructions.</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-distances" class="tab-pane">
+                        <div class="plot-container">
+                            <p class="text-muted">Server-side computation required. Please run locally for full visualizations.</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-angles" class="tab-pane">
+                        <div class="plot-container">
+                            <p class="text-muted">Server-side computation required. Please run locally for full visualizations.</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-summary" class="tab-pane">
+                        <div class="plot-container">
+                            <p class="text-muted">Server-side computation required. Please run locally for full visualizations.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button id="downloadJsonBtn" class="btn btn-secondary" disabled>
+                        <span class="btn-icon">💾</span> Download JSON
+                    </button>
+                    <button id="downloadPlotsBtn" class="btn btn-secondary" disabled>
+                        <span class="btn-icon">📊</span> Download All Plots
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Orion Octave Cubes | <a href="https://github.com/matpng/ddd" target="_blank">GitHub Repository</a></p>
+            <p class="text-muted">Geometric analysis of rotated cube interference patterns</p>
+        </div>
+    </footer>
+
+    <script src="static/js/app-static.js"></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orion Octave Cubes - Geometry Analysis Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" transform="rotate(0 12.5 12.5)"/>
+                    <rect x="20" y="20" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" transform="rotate(30 27.5 27.5)"/>
+                </svg>
+                <h1>Orion Octave Cubes</h1>
+            </div>
+            <p class="subtitle">Interactive Geometric Analysis Dashboard</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Control Panel -->
+        <section class="card control-panel">
+            <h2>Analysis Parameters</h2>
+            <form id="analysisForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="side">Cube Side Length</label>
+                        <input type="number" id="side" name="side" value="2.0" min="0.1" max="100" step="0.1" required>
+                        <small>Length of cube edges (0.1 - 100)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="angle">Rotation Angle (degrees)</label>
+                        <input type="number" id="angle" name="angle" value="30" min="0" max="360" step="1" required>
+                        <small>Rotation of Cube B around z-axis (0 - 360°)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxDistancePairs">Max Distance Pairs</label>
+                        <input type="number" id="maxDistancePairs" name="max_distance_pairs" value="20000" min="1000" max="100000" step="1000">
+                        <small>Sample size for distance analysis</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxDirectionPairs">Max Direction Pairs</label>
+                        <input type="number" id="maxDirectionPairs" name="max_direction_pairs" value="8000" min="1000" max="50000" step="1000">
+                        <small>Sample size for direction analysis</small>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="runAnalysisBtn">
+                        <span class="btn-icon">▶</span>
+                        Run Analysis
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="resetBtn">
+                        <span class="btn-icon">↻</span>
+                        Reset
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+            <div class="spinner"></div>
+            <p>Running geometric analysis...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" style="display: none;">
+            <!-- Summary Cards -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📐</div>
+                    <div class="stat-content">
+                        <h3>Configuration</h3>
+                        <p class="stat-value" id="statSide">-</p>
+                        <small id="statAngle">-</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⚫</div>
+                    <div class="stat-content">
+                        <h3>Unique Points</h3>
+                        <p class="stat-value" id="statPoints">-</p>
+                        <small id="statPointBreakdown">-</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📏</div>
+                    <div class="stat-content">
+                        <h3>Distance Range</h3>
+                        <p class="stat-value" id="statDistRange">-</p>
+                        <small id="statDistMean">-</small>
+                    </div>
+                </div>
+
+                <div class="stat-card golden">
+                    <div class="stat-icon">✨</div>
+                    <div class="stat-content">
+                        <h3>Golden Ratio</h3>
+                        <p class="stat-value" id="statPhi">-</p>
+                        <small id="statPhiCandidates">-</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🔄</div>
+                    <div class="stat-content">
+                        <h3>Directions</h3>
+                        <p class="stat-value" id="statDirections">-</p>
+                        <small id="statAngles">-</small>
+                    </div>
+                </div>
+
+                <div class="stat-card" id="icoCard">
+                    <div class="stat-icon">⬡</div>
+                    <div class="stat-content">
+                        <h3>Icosahedral Match</h3>
+                        <p class="stat-value" id="statIcoMatch">-</p>
+                        <small id="statIcoAngle">-</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Special Angles Section -->
+            <section class="card">
+                <h2>Special Symmetry Angles</h2>
+                <div id="specialAnglesGrid" class="special-angles-grid">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- Visualization Tabs -->
+            <section class="card">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="3d">3D Lattice</button>
+                    <button class="tab-btn" data-tab="distances">Distance Spectrum</button>
+                    <button class="tab-btn" data-tab="angles">Angle Distribution</button>
+                    <button class="tab-btn" data-tab="summary">Summary Report</button>
+                </div>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="tab-3d">
+                        <div class="plot-container">
+                            <img id="plot3d" src="" alt="3D Lattice Plot" class="plot-image">
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="tab-distances">
+                        <div class="plot-container">
+                            <img id="plotDistances" src="" alt="Distance Spectrum Plot" class="plot-image">
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="tab-angles">
+                        <div class="plot-container">
+                            <img id="plotAngles" src="" alt="Angle Distribution Plot" class="plot-image">
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="tab-summary">
+                        <div class="plot-container">
+                            <img id="plotSummary" src="" alt="Summary Report" class="plot-image">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Actions -->
+            <section class="card">
+                <h2>Export & Actions</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-success" id="downloadJsonBtn">
+                        <span class="btn-icon">💾</span>
+                        Download JSON Results
+                    </button>
+                    <button class="btn btn-secondary" id="downloadPlotsBtn">
+                        <span class="btn-icon">📊</span>
+                        Download All Plots
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Error Display -->
+        <div id="errorDisplay" class="error-message" style="display: none;"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Orion Octave Cubes | Computational Geometry Research</p>
+            <p class="footer-links">
+                <a href="https://github.com" target="_blank">GitHub</a> •
+                <a href="#" onclick="showAbout(); return false;">About</a> •
+                <a href="#" onclick="showHelp(); return false;">Help</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
