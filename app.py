@@ -30,6 +30,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Suppress matplotlib font manager debug logs
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -204,7 +207,7 @@ def generate_plot(plot_type, cache_key):
         elif plot_type == 'summary':
             img = create_summary_plot(results)
         else:
-            return jsonify({'error': 'Invalid plot type'}), 400
+            return jsonify({'error': f'Invalid plot type: {plot_type}. Valid types: 3d, distances, angles, summary'}), 400
         
         return send_file(img, mimetype='image/png')
         
