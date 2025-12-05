@@ -1,0 +1,7 @@
+2025-12-05 23:11:33,239 - autonomous_discovery_daemon - INFO - ======================================================================
+2025-12-05 23:11:33,239 - autonomous_discovery_daemon - INFO - Autonomous Discovery Daemon Started
+2025-12-05 23:11:33,239 - autonomous_discovery_daemon - INFO - ======================================================================
+2025-12-05 23:11:33,239 - autonomous_discovery_daemon - INFO - Output directory: test_autonomous_output
+2025-12-05 23:11:33,240 - autonomous_discovery_daemon - INFO - Mode: REAL-TIME COMPUTATION (no pre-populated data)
+2025-12-05 23:11:33,240 - autonomous_discovery_daemon - INFO - Press Ctrl+C to stop
+2025-12-05 23:11:33,240 - autonomous_discovery_daemon - INFO - ======================================================================
