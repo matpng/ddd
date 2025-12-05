@@ -30,13 +30,13 @@ Runtime: Python 3
 Branch: main
 
 Root Directory: 
-(leave empty - uses repository root)
+(leave BLANK - do not enter anything)
 
 Build Command:
-chmod +x build.sh && ./build.sh
+pip install --upgrade pip && pip install -r requirements.txt
 
 Start Command:
-chmod +x start.sh && ./start.sh
+gunicorn app:app
 
 ⭐ Auto-Deploy: YES  ← Enable this!
 ```
@@ -127,13 +127,19 @@ Your app automatically detects production mode via `FLASK_ENV=production`:
 
 **Build Command**:
 ```bash
-chmod +x build.sh && ./build.sh
+pip install --upgrade pip && pip install -r requirements.txt
 ```
 
 **Start Command**:
 ```bash
-chmod +x start.sh && ./start.sh
+gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --access-logfile - --error-logfile -
 ```
+
+Or use the simpler form:
+```bash
+gunicorn app:app
+```
+(Render will automatically configure PORT and basic settings)
 
 ### Step 3: Environment Variables
 
