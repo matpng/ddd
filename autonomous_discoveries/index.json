@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "created": "2025-12-05T00:00:00Z",
-  "total_discoveries": 2,
+  "total_discoveries": 12,
   "discoveries": [
     {
       "id": "test_discovery_000644",
@@ -45,7 +45,337 @@
           }
         }
       }
+    },
+    {
+      "id": "autonomous_angle_sweep_210343",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:43.676908",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 0,
+        "unique_distances": 35,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 72
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 101
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 122
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 398
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 83
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210343",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:43.939481",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 1,
+        "unique_distances": 32,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 126
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 98
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 93
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 320
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 82
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210344",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:44.121463",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 0,
+        "unique_distances": 18,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 36
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 80
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 60
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 288
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 72
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210344",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:44.353151",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 1,
+        "unique_distances": 32,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 114
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 100
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 92
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 320
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 80
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210344",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:44.584001",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 0,
+        "unique_distances": 35,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 64
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 102
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 115
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 398
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 82
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210344",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:44.619676",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 16,
+        "golden_ratio_candidates": 0,
+        "unique_distances": 8,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 0
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 12
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 22
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 130
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 8
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210344",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:44.812100",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 0,
+        "unique_distances": 35,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 72
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 101
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 122
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 398
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 83
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210345",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:45.069600",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 1,
+        "unique_distances": 32,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 126
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 98
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 93
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 320
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 82
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210345",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:45.204921",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 0,
+        "unique_distances": 18,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 36
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 80
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 60
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 288
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 72
+          }
+        }
+      }
+    },
+    {
+      "id": "autonomous_angle_sweep_210345",
+      "type": "autonomous_angle_sweep",
+      "timestamp": "2025-12-06T21:03:45.404554",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 1,
+        "unique_distances": 32,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 114
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 100
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 92
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 320
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 80
+          }
+        }
+      }
     }
   ],
-  "last_updated": "2025-12-06T00:31:26.913743"
+  "last_updated": "2025-12-06T21:03:45.406435"
 }

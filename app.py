@@ -96,56 +96,29 @@ def run_autonomous_daemon():
     logger.info("Starting autonomous discovery daemon...")
     
     discovery_interval = int(os.environ.get('DISCOVERY_INTERVAL', '3600'))  # Default 1 hour
+    cycle_count = 0
     
     while daemon_status['running']:
         try:
-            logger.info("Running autonomous angle sweep discovery...")
+            cycle_count += 1
             
-            # Run a quick angle sweep (simplified version)
-            angles_to_test = [15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165]
+            # Rotate through different discovery modes
+            mode = cycle_count % 4
             
-            for angle in angles_to_test:
-                if not daemon_status['running']:
-                    break
-                
-                try:
-                    # Run analysis
-                    results = run_analysis(
-                        side=2.0,
-                        angle=angle,
-                        max_distance_pairs=10000,
-                        max_direction_pairs=5000,
-                        verbose=False
-                    )
-                    
-                    # Prepare discovery data
-                    discovery_data = {
-                        'angle': angle,
-                        'summary': {
-                            'unique_points': results['point_counts']['unique_points'],
-                            'golden_ratio_candidates': results['golden_ratio']['candidate_count'],
-                            'unique_distances': results['distances']['distinct_count'],
-                            'special_angles': results['special_angles']
-                        },
-                        'full_results': results
-                    }
-                    
-                    # Save discovery
-                    discovery_id = discovery_manager.save_discovery(
-                        discovery_data,
-                        'autonomous_angle_sweep'
-                    )
-                    
-                    daemon_status['last_discovery'] = datetime.utcnow().isoformat()
-                    daemon_status['discoveries_today'] += 1
-                    daemon_status['total_discoveries'] += 1
-                    
-                    logger.info(f"Saved discovery: {discovery_id} (angle={angle}°)")
-                    
-                except Exception as e:
-                    logger.error(f"Error in discovery for angle {angle}: {e}")
+            if mode == 0:
+                # Mode 1: Standard angle sweep (original)
+                _run_angle_sweep_discovery()
+            elif mode == 1:
+                # Mode 2: Fine-grained sweep around golden ratio angles
+                _run_golden_ratio_discovery()
+            elif mode == 2:
+                # Mode 3: Special symmetry angles
+                _run_symmetry_discovery()
+            elif mode == 3:
+                # Mode 4: Parameter variation (different cube sizes)
+                _run_parameter_sweep_discovery()
             
-            logger.info(f"Autonomous discovery cycle complete. Sleeping for {discovery_interval}s...")
+            logger.info(f"Autonomous discovery cycle {cycle_count} complete. Sleeping for {discovery_interval}s...")
             
             # Sleep in chunks to allow for graceful shutdown
             for _ in range(discovery_interval):
@@ -158,6 +131,164 @@ def run_autonomous_daemon():
             time.sleep(60)  # Wait a minute before retrying
     
     logger.info("Autonomous discovery daemon stopped.")
+
+
+def _run_angle_sweep_discovery():
+    """Standard angle sweep discovery mode."""
+    logger.info("Mode 1: Running standard angle sweep...")
+    angles_to_test = [15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165]
+    
+    for angle in angles_to_test:
+        if not daemon_status['running']:
+            break
+        _discover_angle(angle, 'autonomous_angle_sweep')
+
+
+def _run_golden_ratio_discovery():
+    """Fine-grained sweep around golden ratio angles."""
+    logger.info("Mode 2: Running golden ratio angle discovery...")
+    # Golden angle ≈ 137.5°, Fibonacci angles
+    golden_angles = [
+        30.0, 31.7, 33.7, 36.0,  # Pentagon region
+        51.8, 58.3, 63.4,         # Golden spiral region
+        137.5, 138.0, 138.5,      # Golden angle
+        222.5, 223.0, 223.5       # Complementary golden angle
+    ]
+    
+    for angle in golden_angles:
+        if not daemon_status['running']:
+            break
+        _discover_angle(angle, 'golden_ratio_sweep')
+
+
+def _run_symmetry_discovery():
+    """Test angles corresponding to high-symmetry crystal systems."""
+    logger.info("Mode 3: Running crystal symmetry discovery...")
+    # Crystallographic special angles
+    symmetry_angles = [
+        54.74,   # Tetrahedral angle (diamond)
+        70.53,   # Rhombohedral 
+        109.47,  # Tetrahedral sp3 (methane)
+        120.0,   # Trigonal/hexagonal
+        144.0,   # Pentagon diagonal
+        168.0    # Near-linear
+    ]
+    
+    for angle in symmetry_angles:
+        if not daemon_status['running']:
+            break
+        _discover_angle(angle, 'symmetry_sweep')
+
+
+def _run_parameter_sweep_discovery():
+    """Vary cube size ratios for scaling discoveries."""
+    logger.info("Mode 4: Running parameter sweep discovery...")
+    # Different cube size ratios
+    configs = [
+        (1.5, 45),   # Smaller cube, classic angle
+        (2.5, 60),   # Larger cube, hexagonal
+        (1.8, 72),   # Golden ratio size, pentagonal
+        (2.2, 36),   # Varied size, icosahedral
+    ]
+    
+    for size, angle in configs:
+        if not daemon_status['running']:
+            break
+        _discover_with_params(size, angle, 'parameter_sweep')
+
+
+def _discover_angle(angle, discovery_type):
+    """Helper function to discover a single angle configuration."""
+    try:
+        results = run_analysis(
+            side=2.0,
+            angle=angle,
+            max_distance_pairs=10000,
+            max_direction_pairs=5000,
+            verbose=False
+        )
+        
+        # Enhanced analysis
+        summary = {
+            'unique_points': results['point_counts']['unique_points'],
+            'golden_ratio_candidates': results['golden_ratio']['candidate_count'],
+            'unique_distances': results['distances']['distinct_count'],
+            'special_angles': results['special_angles'],
+            'max_distance': results['distances']['statistics']['max'],
+            'min_distance': results['distances']['statistics']['min'],
+            'distance_mean': results['distances']['statistics']['mean'],
+            'total_angle_pairs': sum(results['special_angles'].values()) if results['special_angles'] else 0
+        }
+        
+        # Check for exceptional patterns
+        if results['golden_ratio']['candidate_count'] > 2:
+            summary['exceptional'] = 'Multiple golden ratio candidates'
+        if results['point_counts']['unique_points'] > 40:
+            summary['exceptional'] = 'High complexity lattice'
+        if '36.0' in results['special_angles'] and results['special_angles']['36.0']['count'] > 100:
+            summary['exceptional'] = 'Strong icosahedral symmetry'
+        
+        discovery_data = {
+            'angle': angle,
+            'summary': summary,
+            'full_results': results
+        }
+        
+        discovery_id = discovery_manager.save_discovery(discovery_data, discovery_type)
+        
+        daemon_status['last_discovery'] = datetime.utcnow().isoformat()
+        daemon_status['discoveries_today'] += 1
+        daemon_status['total_discoveries'] += 1
+        
+        exceptional = summary.get('exceptional', '')
+        log_msg = f"Saved discovery: {discovery_id} (angle={angle}°"
+        if exceptional:
+            log_msg += f", {exceptional}"
+        log_msg += ")"
+        logger.info(log_msg)
+        
+    except Exception as e:
+        logger.error(f"Error in discovery for angle {angle}: {e}")
+
+
+def _discover_with_params(size, angle, discovery_type):
+    """Helper function to discover with varied parameters."""
+    try:
+        results = run_analysis(
+            side=size,
+            angle=angle,
+            max_distance_pairs=10000,
+            max_direction_pairs=5000,
+            verbose=False
+        )
+        
+        summary = {
+            'cube_size': size,
+            'angle': angle,
+            'unique_points': results['point_counts']['unique_points'],
+            'golden_ratio_candidates': results['golden_ratio']['candidate_count'],
+            'unique_distances': results['distances']['distinct_count'],
+            'special_angles': results['special_angles'],
+            'scaling_factor': size / 2.0  # Relative to standard size
+        }
+        
+        discovery_data = {
+            'angle': angle,
+            'size': size,
+            'summary': summary,
+            'full_results': results
+        }
+        
+        discovery_id = discovery_manager.save_discovery(discovery_data, discovery_type)
+        
+        daemon_status['last_discovery'] = datetime.utcnow().isoformat()
+        daemon_status['discoveries_today'] += 1
+        daemon_status['total_discoveries'] += 1
+        
+        logger.info(f"Saved discovery: {discovery_id} (size={size}, angle={angle}°)")
+        
+    except Exception as e:
+        logger.error(f"Error in parameter discovery (size={size}, angle={angle}): {e}")
 
 
 def start_autonomous_daemon():
@@ -677,7 +808,7 @@ def get_discovery_stats():
 
 @app.route('/api/discoveries/search')
 def search_discoveries():
-    """Search discoveries."""
+    """Search discoveries with advanced filtering."""
     try:
         query = request.args.get('q', '')
         discovery_type = request.args.get('type', '')
@@ -691,6 +822,99 @@ def search_discoveries():
         })
     except Exception as e:
         logger.error(f"Error searching discoveries: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/exceptional')
+def get_exceptional_discoveries():
+    """Get discoveries with exceptional patterns (golden ratio, high complexity, etc.)."""
+    try:
+        # Get all discoveries
+        all_discoveries = discovery_manager.get_all(limit=1000)
+        exceptional = []
+        
+        for disc in all_discoveries.get('discoveries', []):
+            disc_data = discovery_manager.get_by_id(disc['id'])
+            if disc_data and 'data' in disc_data:
+                summary = disc_data['data'].get('summary', {})
+                # Check for exceptional markers
+                if summary.get('exceptional') or \
+                   summary.get('golden_ratio_candidates', 0) > 2 or \
+                   summary.get('unique_points', 0) > 40:
+                    exceptional.append(disc)
+        
+        return jsonify({
+            'success': True,
+            'count': len(exceptional),
+            'discoveries': exceptional
+        })
+    except Exception as e:
+        logger.error(f"Error getting exceptional discoveries: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/by-type/<discovery_type>')
+def get_discoveries_by_type(discovery_type):
+    """Get discoveries filtered by type."""
+    try:
+        all_discoveries = discovery_manager.get_all(limit=1000)
+        filtered = [d for d in all_discoveries.get('discoveries', []) 
+                   if d.get('type') == discovery_type]
+        
+        return jsonify({
+            'success': True,
+            'type': discovery_type,
+            'count': len(filtered),
+            'discoveries': filtered
+        })
+    except Exception as e:
+        logger.error(f"Error getting discoveries by type: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/analysis-summary')
+def get_analysis_summary():
+    """Get aggregate analysis across all discoveries."""
+    try:
+        all_discoveries = discovery_manager.get_all(limit=1000)
+        
+        total_golden_ratio = 0
+        max_unique_points = 0
+        discovery_types = {}
+        angle_distribution = {}
+        
+        for disc in all_discoveries.get('discoveries', []):
+            disc_data = discovery_manager.get_by_id(disc['id'])
+            if disc_data and 'data' in disc_data:
+                summary = disc_data['data'].get('summary', {})
+                
+                # Aggregate metrics
+                total_golden_ratio += summary.get('golden_ratio_candidates', 0)
+                max_unique_points = max(max_unique_points, summary.get('unique_points', 0))
+                
+                # Count by type
+                dtype = disc.get('type', 'unknown')
+                discovery_types[dtype] = discovery_types.get(dtype, 0) + 1
+                
+                # Angle distribution
+                angle = disc_data['data'].get('angle')
+                if angle:
+                    angle_key = str(int(angle))
+                    angle_distribution[angle_key] = angle_distribution.get(angle_key, 0) + 1
+        
+        return jsonify({
+            'success': True,
+            'summary': {
+                'total_discoveries': all_discoveries.get('total', 0),
+                'total_golden_ratio_candidates': total_golden_ratio,
+                'max_unique_points_found': max_unique_points,
+                'discovery_types': discovery_types,
+                'angle_distribution': angle_distribution,
+                'most_tested_angle': max(angle_distribution.items(), key=lambda x: x[1])[0] if angle_distribution else None
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error getting analysis summary: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
