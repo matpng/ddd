@@ -83,6 +83,101 @@ daemon_status = {
 }
 
 
+# ============================================================================
+# DAEMON STARTUP FUNCTIONS (must be defined before calling)
+# ============================================================================
+
+def run_autonomous_daemon():
+    """Background daemon that continuously runs autonomous discoveries."""
+    global daemon_status
+    
+    daemon_status['running'] = True
+    daemon_status['started_at'] = datetime.utcnow().isoformat()
+    logger.info("Starting autonomous discovery daemon...")
+    
+    discovery_interval = int(os.environ.get('DISCOVERY_INTERVAL', '3600'))  # Default 1 hour
+    
+    while daemon_status['running']:
+        try:
+            logger.info("Running autonomous angle sweep discovery...")
+            
+            # Run a quick angle sweep (simplified version)
+            angles_to_test = [15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165]
+            
+            for angle in angles_to_test:
+                if not daemon_status['running']:
+                    break
+                
+                try:
+                    # Run analysis
+                    results = run_analysis(
+                        side=2.0,
+                        angle=angle,
+                        max_distance_pairs=10000,
+                        max_direction_pairs=5000,
+                        verbose=False
+                    )
+                    
+                    # Prepare discovery data
+                    discovery_data = {
+                        'angle': angle,
+                        'summary': {
+                            'unique_points': results['point_counts']['unique_points'],
+                            'golden_ratio_candidates': results['golden_ratio']['candidate_count'],
+                            'unique_distances': results['distances']['distinct_count'],
+                            'special_angles': results['special_angles']
+                        },
+                        'full_results': results
+                    }
+                    
+                    # Save discovery
+                    discovery_id = discovery_manager.save_discovery(
+                        discovery_data,
+                        'autonomous_angle_sweep'
+                    )
+                    
+                    daemon_status['last_discovery'] = datetime.utcnow().isoformat()
+                    daemon_status['discoveries_today'] += 1
+                    daemon_status['total_discoveries'] += 1
+                    
+                    logger.info(f"Saved discovery: {discovery_id} (angle={angle}°)")
+                    
+                except Exception as e:
+                    logger.error(f"Error in discovery for angle {angle}: {e}")
+            
+            logger.info(f"Autonomous discovery cycle complete. Sleeping for {discovery_interval}s...")
+            
+            # Sleep in chunks to allow for graceful shutdown
+            for _ in range(discovery_interval):
+                if not daemon_status['running']:
+                    break
+                time.sleep(1)
+                
+        except Exception as e:
+            logger.error(f"Error in autonomous daemon: {e}")
+            time.sleep(60)  # Wait a minute before retrying
+    
+    logger.info("Autonomous discovery daemon stopped.")
+
+
+def start_autonomous_daemon():
+    """Start the autonomous daemon in a background thread."""
+    if os.environ.get('ENABLE_AUTONOMOUS', 'true').lower() == 'true':
+        daemon_thread = threading.Thread(target=run_autonomous_daemon, daemon=True)
+        daemon_thread.start()
+        logger.info("Autonomous daemon thread started")
+    else:
+        logger.info("Autonomous daemon disabled by configuration")
+
+
+# Start daemon when module is imported (works with gunicorn)
+start_autonomous_daemon()
+
+
+# ============================================================================
+# FLASK ROUTES
+# ============================================================================
+
 @app.route('/')
 def index():
     """Main dashboard page."""
@@ -625,94 +720,6 @@ def download_discovery(discovery_id):
 
 
 # ============================================================================
-# AUTONOMOUS DAEMON BACKGROUND THREAD
-# ============================================================================
-
-def run_autonomous_daemon():
-    """Background thread that runs autonomous discoveries."""
-    global daemon_status
-    
-    logger.info("Starting autonomous discovery daemon...")
-    daemon_status['running'] = True
-    daemon_status['started_at'] = datetime.utcnow().isoformat()
-    
-    # Simple discovery loop - runs angle sweep periodically
-    discovery_interval = 3600  # 1 hour between discoveries
-    
-    while daemon_status['running']:
-        try:
-            logger.info("Running autonomous angle sweep discovery...")
-            
-            # Run a quick angle sweep (simplified version)
-            angles_to_test = [15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165]
-            
-            for angle in angles_to_test:
-                if not daemon_status['running']:
-                    break
-                
-                try:
-                    # Run analysis
-                    results = run_analysis(
-                        side=2.0,
-                        angle=angle,
-                        max_distance_pairs=10000,
-                        max_direction_pairs=5000,
-                        verbose=False
-                    )
-                    
-                    # Prepare discovery data
-                    discovery_data = {
-                        'angle': angle,
-                        'summary': {
-                            'unique_points': results['point_counts']['unique_points'],
-                            'golden_ratio_candidates': results['golden_ratio']['candidate_count'],
-                            'unique_distances': results['distances']['distinct_count'],
-                            'special_angles': results['special_angles']
-                        },
-                        'full_results': results
-                    }
-                    
-                    # Save discovery
-                    discovery_id = discovery_manager.save_discovery(
-                        discovery_data,
-                        'autonomous_angle_sweep'
-                    )
-                    
-                    daemon_status['last_discovery'] = datetime.utcnow().isoformat()
-                    daemon_status['discoveries_today'] += 1
-                    daemon_status['total_discoveries'] += 1
-                    
-                    logger.info(f"Saved discovery: {discovery_id} (angle={angle}°)")
-                    
-                except Exception as e:
-                    logger.error(f"Error in discovery for angle {angle}: {e}")
-            
-            logger.info(f"Autonomous discovery cycle complete. Sleeping for {discovery_interval}s...")
-            
-            # Sleep in small intervals to allow graceful shutdown
-            for _ in range(discovery_interval):
-                if not daemon_status['running']:
-                    break
-                time.sleep(1)
-                
-        except Exception as e:
-            logger.error(f"Error in autonomous daemon: {e}", exc_info=True)
-            time.sleep(60)  # Wait a minute before retrying
-    
-    logger.info("Autonomous discovery daemon stopped.")
-
-
-def start_autonomous_daemon():
-    """Start the autonomous daemon in a background thread."""
-    if os.environ.get('ENABLE_AUTONOMOUS', 'true').lower() == 'true':
-        daemon_thread = threading.Thread(target=run_autonomous_daemon, daemon=True)
-        daemon_thread.start()
-        logger.info("Autonomous daemon thread started")
-    else:
-        logger.info("Autonomous daemon disabled by configuration")
-
-
-# ============================================================================
 # MAIN APPLICATION ENTRY POINT
 # ============================================================================
 
@@ -737,7 +744,6 @@ if __name__ == '__main__':
     print(f"  FLASK_PORT={Config.PORT}")
     print("=" * 70)
     
-    # Start autonomous discovery daemon
-    start_autonomous_daemon()
+    # Daemon already started at module import time
     
     app.run(debug=Config.DEBUG, host=Config.HOST, port=Config.PORT)
