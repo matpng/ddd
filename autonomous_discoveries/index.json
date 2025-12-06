@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "created": "2025-12-05T00:00:00Z",
-  "total_discoveries": 1,
+  "total_discoveries": 2,
   "discoveries": [
     {
       "id": "test_discovery_000644",
@@ -12,7 +12,40 @@
         "unique_points": 100,
         "golden_ratio_present": true
       }
+    },
+    {
+      "id": "final_test_discovery_003126",
+      "type": "final_test_discovery",
+      "timestamp": "2025-12-06T00:31:26.910926",
+      "date": "2025-12-06",
+      "summary": {
+        "unique_points": 32,
+        "golden_ratio_candidates": 1,
+        "unique_distances": 32,
+        "special_angles": {
+          "36.0": {
+            "description": "Pentagon/Icosahedron",
+            "count": 114
+          },
+          "60.0": {
+            "description": "Hexagon/Octahedron",
+            "count": 100
+          },
+          "72.0": {
+            "description": "Pentagon/Dodecahedron",
+            "count": 92
+          },
+          "90.0": {
+            "description": "Cube/Octahedron",
+            "count": 320
+          },
+          "120.0": {
+            "description": "Hexagon",
+            "count": 80
+          }
+        }
+      }
     }
   ],
-  "last_updated": "2025-12-06T00:06:44.887817"
+  "last_updated": "2025-12-06T00:31:26.913743"
 }

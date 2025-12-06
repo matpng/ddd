@@ -654,18 +654,19 @@ def run_autonomous_daemon():
                     # Run analysis
                     results = run_analysis(
                         side=2.0,
-                        rotation_angle_degrees=angle,
+                        angle=angle,
                         max_distance_pairs=10000,
-                        max_direction_pairs=5000
+                        max_direction_pairs=5000,
+                        verbose=False
                     )
                     
                     # Prepare discovery data
                     discovery_data = {
                         'angle': angle,
                         'summary': {
-                            'unique_points': results['point_counts']['unique'],
-                            'golden_ratio_present': results['golden_ratio']['present'],
-                            'unique_distances': results['distances']['unique_count'],
+                            'unique_points': results['point_counts']['unique_points'],
+                            'golden_ratio_candidates': results['golden_ratio']['candidate_count'],
+                            'unique_distances': results['distances']['distinct_count'],
                             'special_angles': results['special_angles']
                         },
                         'full_results': results
