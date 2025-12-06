@@ -22,6 +22,9 @@ from mpl_toolkits.mplot3d import Axes3D
 # Import our modules
 from orion_octave_test import main as run_analysis
 from config import Config
+from discovery_manager import DiscoveryManager
+import threading
+import time
 
 # Setup logging
 logging.basicConfig(
@@ -67,11 +70,29 @@ class LRUCache:
 
 analysis_cache = LRUCache(max_size=Config.CACHE_MAX_SIZE) if Config.CACHE_ENABLED else {}
 
+# Initialize discovery manager
+discovery_manager = DiscoveryManager()
+
+# Autonomous daemon status
+daemon_status = {
+    'running': False,
+    'discoveries_today': 0,
+    'last_discovery': None,
+    'total_discoveries': 0,
+    'started_at': None
+}
+
 
 @app.route('/')
 def index():
     """Main dashboard page."""
     return render_template('index.html')
+
+
+@app.route('/discoveries')
+def discoveries():
+    """Autonomous discoveries dashboard page."""
+    return render_template('discoveries.html')
 
 
 @app.route('/api/analyze', methods=['POST'])
@@ -463,6 +484,237 @@ SPECIAL ANGLES
     return img
 
 
+# ============================================================================
+# AUTONOMOUS DISCOVERY API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/discoveries/status')
+def discovery_status():
+    """Get autonomous daemon status."""
+    try:
+        stats = discovery_manager.get_stats()
+        daemon_status['total_discoveries'] = stats.get('total_discoveries', 0)
+        
+        # Count today's discoveries
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        date_counts = stats.get('discoveries_by_date', {})
+        daemon_status['discoveries_today'] = date_counts.get(today, 0)
+        
+        # Get latest discovery info
+        latest = stats.get('latest_discovery')
+        if latest:
+            daemon_status['last_discovery'] = latest.get('timestamp')
+        
+        return jsonify({
+            'success': True,
+            'status': daemon_status
+        })
+    except Exception as e:
+        logger.error(f"Error getting discovery status: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/latest')
+def get_latest_discoveries():
+    """Get latest discoveries."""
+    try:
+        count = int(request.args.get('count', 10))
+        discoveries = discovery_manager.get_latest(count)
+        return jsonify({
+            'success': True,
+            'count': len(discoveries),
+            'discoveries': discoveries
+        })
+    except Exception as e:
+        logger.error(f"Error getting latest discoveries: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/all')
+def get_all_discoveries():
+    """Get all discoveries with pagination."""
+    try:
+        limit = int(request.args.get('limit', 50))
+        offset = int(request.args.get('offset', 0))
+        result = discovery_manager.get_all(limit, offset)
+        return jsonify({
+            'success': True,
+            **result
+        })
+    except Exception as e:
+        logger.error(f"Error getting all discoveries: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/<discovery_id>')
+def get_discovery(discovery_id):
+    """Get a specific discovery by ID."""
+    try:
+        discovery = discovery_manager.get_by_id(discovery_id)
+        if discovery:
+            return jsonify({
+                'success': True,
+                'discovery': discovery
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Discovery not found'
+            }), 404
+    except Exception as e:
+        logger.error(f"Error getting discovery {discovery_id}: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/stats')
+def get_discovery_stats():
+    """Get discovery statistics."""
+    try:
+        stats = discovery_manager.get_stats()
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+    except Exception as e:
+        logger.error(f"Error getting discovery stats: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/search')
+def search_discoveries():
+    """Search discoveries."""
+    try:
+        query = request.args.get('q', '')
+        discovery_type = request.args.get('type', '')
+        date = request.args.get('date', '')
+        
+        results = discovery_manager.search(query, discovery_type, date)
+        return jsonify({
+            'success': True,
+            'count': len(results),
+            'discoveries': results
+        })
+    except Exception as e:
+        logger.error(f"Error searching discoveries: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/download/<discovery_id>')
+def download_discovery(discovery_id):
+    """Download a discovery as JSON."""
+    try:
+        discovery = discovery_manager.get_by_id(discovery_id)
+        if not discovery:
+            return jsonify({'error': 'Discovery not found'}), 404
+        
+        # Create JSON file in memory
+        json_str = json.dumps(discovery, indent=2, default=str)
+        json_bytes = io.BytesIO(json_str.encode('utf-8'))
+        
+        filename = f"discovery_{discovery_id}.json"
+        
+        return send_file(
+            json_bytes,
+            mimetype='application/json',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        logger.error(f"Error downloading discovery {discovery_id}: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# AUTONOMOUS DAEMON BACKGROUND THREAD
+# ============================================================================
+
+def run_autonomous_daemon():
+    """Background thread that runs autonomous discoveries."""
+    global daemon_status
+    
+    logger.info("Starting autonomous discovery daemon...")
+    daemon_status['running'] = True
+    daemon_status['started_at'] = datetime.utcnow().isoformat()
+    
+    # Simple discovery loop - runs angle sweep periodically
+    discovery_interval = 3600  # 1 hour between discoveries
+    
+    while daemon_status['running']:
+        try:
+            logger.info("Running autonomous angle sweep discovery...")
+            
+            # Run a quick angle sweep (simplified version)
+            angles_to_test = [15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165]
+            
+            for angle in angles_to_test:
+                if not daemon_status['running']:
+                    break
+                
+                try:
+                    # Run analysis
+                    results = run_analysis(
+                        side=2.0,
+                        rotation_angle_degrees=angle,
+                        max_distance_pairs=10000,
+                        max_direction_pairs=5000
+                    )
+                    
+                    # Prepare discovery data
+                    discovery_data = {
+                        'angle': angle,
+                        'summary': {
+                            'unique_points': results['point_counts']['unique'],
+                            'golden_ratio_present': results['golden_ratio']['present'],
+                            'unique_distances': results['distances']['unique_count'],
+                            'special_angles': results['special_angles']
+                        },
+                        'full_results': results
+                    }
+                    
+                    # Save discovery
+                    discovery_id = discovery_manager.save_discovery(
+                        discovery_data,
+                        'autonomous_angle_sweep'
+                    )
+                    
+                    daemon_status['last_discovery'] = datetime.utcnow().isoformat()
+                    daemon_status['discoveries_today'] += 1
+                    daemon_status['total_discoveries'] += 1
+                    
+                    logger.info(f"Saved discovery: {discovery_id} (angle={angle}°)")
+                    
+                except Exception as e:
+                    logger.error(f"Error in discovery for angle {angle}: {e}")
+            
+            logger.info(f"Autonomous discovery cycle complete. Sleeping for {discovery_interval}s...")
+            
+            # Sleep in small intervals to allow graceful shutdown
+            for _ in range(discovery_interval):
+                if not daemon_status['running']:
+                    break
+                time.sleep(1)
+                
+        except Exception as e:
+            logger.error(f"Error in autonomous daemon: {e}", exc_info=True)
+            time.sleep(60)  # Wait a minute before retrying
+    
+    logger.info("Autonomous discovery daemon stopped.")
+
+
+def start_autonomous_daemon():
+    """Start the autonomous daemon in a background thread."""
+    if os.environ.get('ENABLE_AUTONOMOUS', 'true').lower() == 'true':
+        daemon_thread = threading.Thread(target=run_autonomous_daemon, daemon=True)
+        daemon_thread.start()
+        logger.info("Autonomous daemon thread started")
+    else:
+        logger.info("Autonomous daemon disabled by configuration")
+
+
+# ============================================================================
+# MAIN APPLICATION ENTRY POINT
+# ============================================================================
+
 if __name__ == '__main__':
     print("=" * 70)
     print("Orion Octave Cubes - Web Application")
@@ -483,5 +735,8 @@ if __name__ == '__main__':
     print(f"  FLASK_HOST={Config.HOST}")
     print(f"  FLASK_PORT={Config.PORT}")
     print("=" * 70)
+    
+    # Start autonomous discovery daemon
+    start_autonomous_daemon()
     
     app.run(debug=Config.DEBUG, host=Config.HOST, port=Config.PORT)

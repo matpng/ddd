@@ -24,6 +24,33 @@
 
     <!-- Main Content -->
     <main class="container">
+        <!-- Autonomous Status Banner -->
+        <section class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h3 style="margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="autonomousIcon">🟢</span>
+                        <span>Autonomous Discovery System</span>
+                    </h3>
+                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;" id="autonomousStatus">Initializing...</p>
+                </div>
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700;" id="autonomousCount">-</div>
+                        <div style="font-size: 0.75rem; opacity: 0.9;">Discoveries Today</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700;" id="autonomousTotal">-</div>
+                        <div style="font-size: 0.75rem; opacity: 0.9;">Total Discoveries</div>
+                    </div>
+                </div>
+                <a href="/discoveries" class="btn" style="background: white; color: #667eea; text-decoration: none;">
+                    <span class="btn-icon">🔬</span>
+                    View All Discoveries
+                </a>
+            </div>
+        </section>
+
         <!-- Control Panel -->
         <section class="card control-panel">
             <h2>Analysis Parameters</h2>
@@ -208,6 +235,41 @@
         </div>
     </footer>
 
+    <script>
+        // Load autonomous status
+        async function loadAutonomousStatus() {
+            try {
+                const response = await fetch('/api/discoveries/status');
+                const data = await response.json();
+                
+                const icon = document.getElementById('autonomousIcon');
+                const status = document.getElementById('autonomousStatus');
+                const count = document.getElementById('autonomousCount');
+                const total = document.getElementById('autonomousTotal');
+                
+                if (data.running) {
+                    icon.textContent = '🟢';
+                    status.textContent = `Active - Running continuous discoveries`;
+                } else {
+                    icon.textContent = '🔴';
+                    status.textContent = 'Inactive';
+                }
+                
+                count.textContent = data.discoveries_today || 0;
+                total.textContent = data.total_discoveries || 0;
+                
+            } catch (error) {
+                console.error('Error loading autonomous status:', error);
+                document.getElementById('autonomousStatus').textContent = 'Status unavailable';
+            }
+        }
+        
+        // Load on page load and refresh every 30 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAutonomousStatus();
+            setInterval(loadAutonomousStatus, 30000);
+        });
+    </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
