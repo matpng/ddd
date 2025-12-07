@@ -608,7 +608,26 @@
             
             // Extract summary data
             const summary = discovery.data?.summary || {};
-            const title = discovery.data?.title || formatType(discovery.type) + ' Discovery';
+            
+            // Generate better title - use discovery.data.title or fallback to descriptive title
+            let title = discovery.data?.title;
+            if (!title) {
+                // Fallback: generate descriptive title from data
+                const angle = discovery.data?.angle || 'unknown';
+                const uniquePoints = summary.unique_points || 0;
+                const goldenRatio = summary.golden_ratio_candidates || 0;
+                const typeName = formatType(discovery.type);
+                
+                if (goldenRatio > 3) {
+                    title = `Golden Ratio Rich ${typeName} (${angle}°)`;
+                } else if (uniquePoints > 40) {
+                    title = `High-Complexity ${typeName} at ${angle}°`;
+                } else if (uniquePoints > 25) {
+                    title = `Medium-Complexity ${typeName} at ${angle}°`;
+                } else {
+                    title = `${typeName} Discovery at ${angle}°`;
+                }
+            }
             
             card.innerHTML = `
                 <div class="discovery-header">

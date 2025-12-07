@@ -536,9 +536,11 @@ cube B around the z-axis relative to a fixed cube A. This study investigates:
             '120.0': 'Hexagon'
         }
         
-        for angle, count in sorted(special_angles.items(), key=lambda x: float(x[0])):
-            desc = angle_descriptions.get(angle, 'Custom angle')
-            paper += f"| {angle}° | {desc} | {count} |\n"
+        for angle, angle_data in sorted(special_angles.items(), key=lambda x: float(x[0])):
+            angle_str = str(float(angle)) if isinstance(angle, (int, float)) else str(angle)
+            count = angle_data.get('count', 0) if isinstance(angle_data, dict) else angle_data
+            description = angle_data.get('description', angle_descriptions.get(angle_str, 'Custom angle')) if isinstance(angle_data, dict) else angle_descriptions.get(angle_str, 'Custom angle')
+            paper += f"| {angle_str}° | {description} | {count} |\n"
     
     # Golden ratio analysis
     paper += f"""
@@ -568,6 +570,38 @@ These findings suggest:
 2. Special angles emerge naturally from cubic geometry
 3. Distance distributions follow mathematical regularities
 4. Potential connections to crystallographic space groups
+
+### 4.4 Practical Applications
+
+**Materials Science & Crystallography:**
+- Crystal lattice structure analysis and prediction
+- Understanding molecular packing in protein crystals
+- Design of metamaterials with specific optical/electromagnetic properties
+- Quasicrystal formation and aperiodic tilings
+
+**Engineering & Architecture:**
+- Structural optimization for load distribution
+- Space-efficient packing in 3D manufacturing
+- Geodesic dome and tensegrity structure design
+- Minimal surface architectures
+
+**Computer Graphics & Visualization:**
+- Procedural geometry generation
+- Symmetry-based texture mapping
+- 3D modeling and animation rigging
+- Virtual reality environment construction
+
+**Physics & Chemistry:**
+- Molecular orbital symmetry analysis
+- Phonon dispersion in solid-state physics
+- Electron density distributions
+- Quantum mechanical system modeling
+
+**Mathematics & Computer Science:**
+- Graph theory and network optimization
+- Computational geometry algorithms
+- Group theory and symmetry operations
+- Discrete optimization problems
 
 ## 5. Conclusions
 
@@ -1419,6 +1453,40 @@ def start_daemon():
         })
     except Exception as e:
         logger.error(f"Error starting daemon: {e}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/regenerate-titles', methods=['POST'])
+def regenerate_all_titles():
+    """Regenerate titles for all existing discoveries (admin endpoint)."""
+    try:
+        all_discoveries = discovery_manager.get_all(limit=10000)
+        updated_count = 0
+        
+        for disc_summary in all_discoveries.get('discoveries', []):
+            disc = discovery_manager.get_by_id(disc_summary['id'])
+            if disc and 'data' in disc:
+                # Generate new title
+                title = _generate_discovery_title(disc)
+                disc['data']['title'] = title
+                
+                # Re-save the discovery file
+                date = disc.get('date', datetime.utcnow().strftime('%Y-%m-%d'))
+                date_dir = discovery_manager.base_dir / date
+                json_file = date_dir / f"{disc['id']}.json"
+                
+                if json_file.exists():
+                    discovery_manager._save_json(json_file, disc)
+                    updated_count += 1
+        
+        logger.info(f"Regenerated titles for {updated_count} discoveries")
+        return jsonify({
+            'success': True,
+            'updated': updated_count,
+            'message': f'Successfully regenerated {updated_count} titles'
+        })
+    except Exception as e:
+        logger.error(f"Error regenerating titles: {e}", exc_info=True)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
