@@ -429,11 +429,14 @@
                 </div>
                 
                 <div class="discovery-actions">
-                    <button class="btn btn-secondary btn-small" onclick="viewDiscovery('${discovery.id}')">
-                        👁️ View Details
+                    <button class="btn btn-primary btn-small" onclick="downloadPaper('${discovery.id}')" title="Download Research Paper">
+                        📄 Paper
                     </button>
-                    <button class="btn btn-primary btn-small" onclick="downloadDiscovery('${discovery.id}')">
-                        ⬇️ Download
+                    <button class="btn btn-secondary btn-small" onclick="viewDiscovery('${discovery.id}')">
+                        👁️ View
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="downloadDiscovery('${discovery.id}')">
+                        ⬇️ JSON
                     </button>
                 </div>
             `;
@@ -466,6 +469,10 @@
 
         async function downloadDiscovery(id) {
             window.location.href = `/api/discoveries/download/${id}`;
+        }
+
+        async function downloadPaper(id) {
+            window.location.href = `/api/discoveries/${id}/paper`;
         }
     </script>
 </body>

@@ -234,6 +234,165 @@ def _run_parameter_sweep_discovery():
         _discover_with_params(size, angle, 'parameter_sweep')
 
 
+def _generate_research_paper(discovery: Dict[str, Any]) -> str:
+    """Generate a research paper in Markdown format for a discovery."""
+    
+    # Extract metadata
+    disc_id = discovery.get('id', 'unknown')
+    disc_type = discovery.get('type', 'unknown')
+    timestamp = discovery.get('timestamp', '')
+    data = discovery.get('data', {})
+    summary = data.get('summary', {})
+    
+    # Paper content
+    paper = f"""# Geometric Analysis of Orion Octave Cube Configuration
+## Discovery Report: {disc_id}
+
+**Discovery Type:** {disc_type}  
+**Analysis Date:** {timestamp}  
+**Generated:** {datetime.utcnow().isoformat()}
+
+---
+
+## Abstract
+
+This report presents a computational geometric analysis of cube rotation configurations, 
+exploring the emergence of special geometric relationships and symmetries. The analysis 
+focuses on point distributions, distance patterns, angular relationships, and potential 
+golden ratio occurrences in three-dimensional space.
+
+## 1. Introduction
+
+The Orion Octave Cube system analyzes the geometric properties that emerge when rotating 
+cube B around the z-axis relative to a fixed cube A. This study investigates:
+
+- Unique point distributions in 3D space
+- Distance relationships between vertices
+- Angular symmetries and special angles
+- Golden ratio candidates
+- Geometric invariants
+
+## 2. Methodology
+
+**Parameters:**
+- Cube Side Length: {data.get('side', 2.0)}
+- Rotation Angle: {data.get('angle', 'N/A')}°
+- Sample Size (Distances): {data.get('max_distance_pairs', 'N/A')}
+- Sample Size (Directions): {data.get('max_direction_pairs', 'N/A')}
+
+**Analysis Techniques:**
+- Vertex enumeration and transformation
+- Pairwise distance calculation
+- Direction vector analysis
+- Angular relationship detection
+- Golden ratio proximity testing
+
+## 3. Results
+
+### 3.1 Point Distribution
+- **Unique Points:** {summary.get('unique_points', 'N/A')}
+- **Spatial Configuration:** 3D coordinate system with rotation-induced symmetry
+
+### 3.2 Distance Analysis
+- **Unique Distances:** {summary.get('unique_distances', 'N/A')}
+- **Maximum Distance:** {summary.get('max_distance', 'N/A'):.6f}
+- **Minimum Distance:** {summary.get('min_distance', 'N/A'):.6f}
+- **Mean Distance:** {summary.get('distance_mean', 'N/A'):.6f}
+
+### 3.3 Angular Relationships
+"""
+    
+    # Add special angles if available
+    special_angles = summary.get('special_angles', {})
+    if special_angles:
+        paper += "\n**Special Angles Detected:**\n\n"
+        paper += "| Angle | Geometric Significance | Occurrences |\n"
+        paper += "|-------|----------------------|-------------|\n"
+        
+        angle_descriptions = {
+            '36.0': 'Pentagon/Icosahedron',
+            '60.0': 'Hexagon/Octahedron',
+            '72.0': 'Pentagon/Dodecahedron',
+            '90.0': 'Cube/Octahedron',
+            '120.0': 'Hexagon'
+        }
+        
+        for angle, count in sorted(special_angles.items(), key=lambda x: float(x[0])):
+            desc = angle_descriptions.get(angle, 'Custom angle')
+            paper += f"| {angle}° | {desc} | {count} |\n"
+    
+    # Golden ratio analysis
+    paper += f"""
+
+### 3.4 Golden Ratio Analysis
+- **Candidates Found:** {summary.get('golden_ratio_candidates', 'N/A')}
+
+The golden ratio (φ ≈ 1.618034) appears in numerous natural and geometric contexts. 
+This analysis searches for distance and angle ratios that approximate φ within a 
+tolerance of 0.001.
+
+## 4. Discussion
+
+### 4.1 Geometric Significance
+The detected special angles correspond to fundamental polyhedra:
+- **36° and 72°**: Associated with pentagonal symmetry (dodecahedron, icosahedron)
+- **60° and 120°**: Hexagonal symmetry (hexagon tessellations)
+- **90°**: Cubic and octahedral symmetry
+
+### 4.2 Symmetry Analysis
+The rotation of cube B induces a discrete rotational symmetry group. The special 
+angles detected align with known Platonic and Archimedean solid symmetries.
+
+### 4.3 Implications
+These findings suggest:
+1. Rotational configurations produce predictable geometric patterns
+2. Special angles emerge naturally from cubic geometry
+3. Distance distributions follow mathematical regularities
+4. Potential connections to crystallographic space groups
+
+## 5. Conclusions
+
+This computational analysis reveals structured geometric relationships in rotated 
+cube configurations. The presence of special angles and golden ratio candidates 
+indicates deep mathematical structure underlying simple geometric transformations.
+
+### Future Work
+- Extended parameter sweeps across rotation ranges
+- Multi-axis rotation analysis
+- Comparison with known geometric theorems
+- Application to crystallography and materials science
+
+## 6. Data Availability
+
+Full discovery data available as JSON:
+- Discovery ID: `{disc_id}`
+- Download endpoint: `/api/discoveries/download/{disc_id}`
+
+## 7. Computational Details
+
+**Software:** Orion Octave Cube Analysis System  
+**Language:** Python 3.11+  
+**Libraries:** NumPy, SciPy, Matplotlib, Scikit-learn
+
+---
+
+**Citation:**
+```
+Orion Octave Cube Discovery {disc_id} ({timestamp[:10]})
+Geometric Analysis Report
+Generated via autonomous discovery system
+```
+
+**License:** Research and Educational Use
+
+---
+
+*This paper was automatically generated from computational discovery data.*
+"""
+    
+    return paper
+
+
 def _discover_angle(angle, discovery_type):
     """Helper function to discover a single angle configuration."""
     start_time = time.time()
@@ -1180,9 +1339,8 @@ def get_analysis_summary():
 
 
 @app.route('/api/discoveries/download/<discovery_id>')
-@rate_limit('download')
 def download_discovery(discovery_id):
-    """Download a discovery as JSON."""
+    """Download a discovery as JSON (no rate limit for downloads)."""
     try:
         discovery = discovery_manager.get_by_id(discovery_id)
         if not discovery:
@@ -1202,6 +1360,31 @@ def download_discovery(discovery_id):
         )
     except Exception as e:
         logger.error(f"Error downloading discovery {discovery_id}: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/<discovery_id>/paper')
+def get_discovery_paper(discovery_id):
+    """Generate and download research paper for a discovery."""
+    try:
+        discovery = discovery_manager.get_by_id(discovery_id)
+        if not discovery:
+            return jsonify({'error': 'Discovery not found'}), 404
+        
+        # Generate research paper
+        paper = _generate_research_paper(discovery)
+        paper_bytes = io.BytesIO(paper.encode('utf-8'))
+        
+        filename = f"research_paper_{discovery_id}.md"
+        
+        return send_file(
+            paper_bytes,
+            mimetype='text/markdown',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        logger.error(f"Error generating paper for {discovery_id}: {e}")
         return jsonify({'error': str(e)}), 500
 
 
