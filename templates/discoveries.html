@@ -350,7 +350,10 @@
                 document.getElementById('emptyState').style.display = 'none';
                 
                 const response = await fetch('/api/discoveries/latest?count=50');
-                discoveries = await response.json();
+                const data = await response.json();
+                
+                // Extract discoveries array from response
+                discoveries = data.discoveries || [];
                 
                 document.getElementById('loadingState').style.display = 'none';
                 
@@ -447,7 +450,10 @@
         async function viewDiscovery(id) {
             try {
                 const response = await fetch(`/api/discoveries/${id}`);
-                const discovery = await response.json();
+                const data = await response.json();
+                
+                // Extract discovery from response
+                const discovery = data.discovery || data;
                 
                 // Create a modal or new page to show full details
                 alert(`Discovery: ${id}\n\nFull data available in download.`);
