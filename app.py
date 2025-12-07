@@ -263,13 +263,15 @@ def _generate_discovery_title(discovery: Dict[str, Any]) -> str:
     # Check for dominant special angles
     dominant_angles = []
     for ang, data_val in special_angles.items():
-        count = data_val.get('count', data_val) if isinstance(data_val, dict) else data_val
+        # Convert angle key to string if it's a float
+        ang_str = str(float(ang)) if isinstance(ang, (int, float)) else str(ang)
+        count = data_val.get('count', 0) if isinstance(data_val, dict) else data_val
         if count > 50:
-            if ang == '36.0' or ang == '72.0':
+            if ang_str in ['36.0', '72.0']:
                 dominant_angles.append("Pentagonal")
-            elif ang == '60.0':
+            elif ang_str == '60.0':
                 dominant_angles.append("Hexagonal")
-            elif ang == '90.0':
+            elif ang_str == '90.0':
                 dominant_angles.append("Cubic")
     
     if dominant_angles:
@@ -633,7 +635,9 @@ def _discover_angle(angle, discovery_type):
             'max_distance': results['distances']['statistics']['max'],
             'min_distance': results['distances']['statistics']['min'],
             'distance_mean': results['distances']['statistics']['mean'],
-            'total_angle_pairs': sum(results['special_angles'].values()) if results['special_angles'] else 0
+            'total_angle_pairs': sum(data.get('count', 0) for data in results['special_angles'].values()) if results['special_angles'] else 0,
+            'edge_face_intersections': results['point_counts']['edge_face_intersections'],
+            'edge_edge_intersections': results['point_counts']['edge_edge_intersections']
         }
         
         # Check for exceptional patterns
@@ -641,8 +645,12 @@ def _discover_angle(angle, discovery_type):
             summary['exceptional'] = 'Multiple golden ratio candidates'
         if results['point_counts']['unique_points'] > 40:
             summary['exceptional'] = 'High complexity lattice'
-        if '36.0' in results['special_angles'] and results['special_angles']['36.0']['count'] > 100:
-            summary['exceptional'] = 'Strong icosahedral symmetry'
+        # Check for strong icosahedral symmetry
+        for angle_key, angle_data in results['special_angles'].items():
+            if isinstance(angle_data, dict) and angle_data.get('count', 0) > 100:
+                if str(float(angle_key)) in ['36.0', '72.0']:
+                    summary['exceptional'] = 'Strong icosahedral symmetry'
+                    break
         
         discovery_data = {
             'angle': angle,
@@ -700,7 +708,12 @@ def _discover_with_params(size, angle, discovery_type):
             'golden_ratio_candidates': results['golden_ratio']['candidate_count'],
             'unique_distances': results['distances']['distinct_count'],
             'special_angles': results['special_angles'],
-            'scaling_factor': size / 2.0  # Relative to standard size
+            'scaling_factor': size / 2.0,  # Relative to standard size
+            'max_distance': results['distances']['statistics']['max'],
+            'min_distance': results['distances']['statistics']['min'],
+            'distance_mean': results['distances']['statistics']['mean'],
+            'edge_face_intersections': results['point_counts']['edge_face_intersections'],
+            'edge_edge_intersections': results['point_counts']['edge_edge_intersections']
         }
         
         discovery_data = {
