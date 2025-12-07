@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Orion Octave Cubes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .admin-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .admin-section h2 {
+            margin-top: 0;
+            color: #2E86AB;
+        }
+        
+        .admin-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .admin-action:last-child {
+            margin-bottom: 0;
+        }
+        
+        .action-info {
+            flex: 1;
+        }
+        
+        .action-info h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+        }
+        
+        .action-info p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: #64748B;
+        }
+        
+        .action-button {
+            margin-left: 1rem;
+        }
+        
+        .result-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            display: none;
+        }
+        
+        .result-box.success {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #10B981;
+            display: block;
+        }
+        
+        .result-box.error {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #EF4444;
+            display: block;
+        }
+        
+        .result-box.loading {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border: 1px solid #3B82F6;
+            display: block;
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .nav-links a {
+            display: inline-block;
+            margin: 0 1rem;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🔧 Admin Panel</h1>
+            <p>System maintenance and administrative tasks</p>
+        </div>
+        
+        <div class="admin-section">
+            <h2>Discovery Management</h2>
+            
+            <div class="admin-action">
+                <div class="action-info">
+                    <h3>Regenerate Discovery Titles</h3>
+                    <p>Generate descriptive titles for all existing discoveries based on their characteristics (complexity, symmetry, golden ratio presence)</p>
+                </div>
+                <button class="btn btn-primary action-button" onclick="regenerateTitles()">
+                    🔄 Regenerate All
+                </button>
+            </div>
+            <div id="regenerate-result" class="result-box"></div>
+        </div>
+        
+        <div class="admin-section">
+            <h2>System Information</h2>
+            
+            <div class="admin-action">
+                <div class="action-info">
+                    <h3>View Daemon Status</h3>
+                    <p>Check the autonomous discovery daemon health and statistics</p>
+                </div>
+                <button class="btn btn-secondary action-button" onclick="window.location.href='/api/daemon/health'">
+                    📊 View Status
+                </button>
+            </div>
+            
+            <div class="admin-action">
+                <div class="action-info">
+                    <h3>Discovery Statistics</h3>
+                    <p>View comprehensive statistics about all discoveries</p>
+                </div>
+                <button class="btn btn-secondary action-button" onclick="window.location.href='/api/discoveries/stats'">
+                    📈 View Stats
+                </button>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/">← Home</a>
+            <a href="/discoveries">View Discoveries</a>
+        </div>
+    </div>
+    
+    <script>
+        async function regenerateTitles() {
+            const resultBox = document.getElementById('regenerate-result');
+            resultBox.className = 'result-box loading';
+            resultBox.textContent = '⏳ Regenerating titles for all discoveries...';
+            
+            try {
+                const response = await fetch('/api/discoveries/regenerate-titles', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultBox.className = 'result-box success';
+                    resultBox.textContent = `✅ ${data.message}\n\nUpdated ${data.updated} discoveries successfully.`;
+                } else {
+                    resultBox.className = 'result-box error';
+                    resultBox.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (error) {
+                resultBox.className = 'result-box error';
+                resultBox.textContent = `❌ Network error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

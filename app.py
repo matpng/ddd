@@ -811,6 +811,12 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/admin')
+def admin():
+    """Admin panel for system maintenance."""
+    return render_template('admin.html')
+
+
 @app.route('/health')
 def health():
     """Lightweight health endpoint for load balancers and platform health checks."""
