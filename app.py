@@ -296,9 +296,9 @@ cube B around the z-axis relative to a fixed cube A. This study investigates:
 
 ### 3.2 Distance Analysis
 - **Unique Distances:** {summary.get('unique_distances', 'N/A')}
-- **Maximum Distance:** {summary.get('max_distance', 'N/A'):.6f}
-- **Minimum Distance:** {summary.get('min_distance', 'N/A'):.6f}
-- **Mean Distance:** {summary.get('distance_mean', 'N/A'):.6f}
+- **Maximum Distance:** {summary.get('max_distance', 0):.6f if isinstance(summary.get('max_distance'), (int, float)) else 'N/A'}
+- **Minimum Distance:** {summary.get('min_distance', 0):.6f if isinstance(summary.get('min_distance'), (int, float)) else 'N/A'}
+- **Mean Distance:** {summary.get('distance_mean', 0):.6f if isinstance(summary.get('distance_mean'), (int, float)) else 'N/A'}
 
 ### 3.3 Angular Relationships
 """
