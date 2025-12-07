@@ -19,6 +19,13 @@ import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+import re
 
 # Import our modules
 from orion_octave_test import main as run_analysis
@@ -235,6 +242,215 @@ def _run_parameter_sweep_discovery():
         _discover_with_params(size, angle, 'parameter_sweep')
 
 
+def _generate_discovery_title(discovery: Dict[str, Any]) -> str:
+    """Generate a descriptive title for a discovery."""
+    disc_type = discovery.get('type', 'unknown')
+    data = discovery.get('data', {})
+    summary = data.get('summary', {})
+    angle = data.get('angle', 0)
+    
+    # Extract key metrics
+    unique_points = summary.get('unique_points', 0)
+    golden_ratio = summary.get('golden_ratio_candidates', 0)
+    special_angles = summary.get('special_angles', {})
+    
+    # Determine dominant characteristic
+    title_parts = []
+    
+    if golden_ratio > 3:
+        title_parts.append("Golden Ratio Rich")
+    
+    # Check for dominant special angles
+    dominant_angles = []
+    for ang, data_val in special_angles.items():
+        count = data_val.get('count', data_val) if isinstance(data_val, dict) else data_val
+        if count > 50:
+            if ang == '36.0' or ang == '72.0':
+                dominant_angles.append("Pentagonal")
+            elif ang == '60.0':
+                dominant_angles.append("Hexagonal")
+            elif ang == '90.0':
+                dominant_angles.append("Cubic")
+    
+    if dominant_angles:
+        title_parts.append(f"{'/'.join(set(dominant_angles))} Symmetry")
+    
+    # Complexity indicator
+    if unique_points > 40:
+        title_parts.append("High-Complexity")
+    elif unique_points > 25:
+        title_parts.append("Medium-Complexity")
+    
+    # Angle description
+    if angle:
+        title_parts.append(f"{angle}° Rotation")
+    
+    # Discovery type
+    type_names = {
+        'autonomous_angle_sweep': 'Angle Sweep',
+        'golden_ratio_sweep': 'Golden Ratio',
+        'symmetry_sweep': 'Symmetry',
+        'parameter_sweep': 'Parameter',
+        'multi_axis': 'Multi-Axis'
+    }
+    type_name = type_names.get(disc_type, disc_type.replace('_', ' ').title())
+    
+    if title_parts:
+        return f"{' '.join(title_parts)} - {type_name} Discovery"
+    else:
+        return f"{type_name} Discovery at {angle}°"
+
+
+def _convert_markdown_to_pdf(markdown_text: str, discovery_id: str) -> bytes:
+    """Convert markdown research paper to PDF format."""
+    from io import BytesIO
+    
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
+                           rightMargin=72, leftMargin=72,
+                           topMargin=72, bottomMargin=18)
+    
+    # Container for PDF elements
+    story = []
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#2E86AB'),
+        spaceAfter=30,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#2E86AB'),
+        spaceAfter=12,
+        spaceBefore=12,
+        fontName='Helvetica-Bold'
+    )
+    
+    subheading_style = ParagraphStyle(
+        'CustomSubHeading',
+        parent=styles['Heading3'],
+        fontSize=12,
+        textColor=colors.HexColor('#555555'),
+        spaceAfter=10,
+        spaceBefore=10,
+        fontName='Helvetica-Bold'
+    )
+    
+    body_style = ParagraphStyle(
+        'CustomBody',
+        parent=styles['BodyText'],
+        fontSize=10,
+        alignment=TA_JUSTIFY,
+        spaceAfter=12
+    )
+    
+    # Parse markdown and convert to PDF elements
+    lines = markdown_text.split('\n')
+    i = 0
+    
+    while i < len(lines):
+        line = lines[i].strip()
+        
+        if not line:
+            i += 1
+            continue
+        
+        # Title (# )
+        if line.startswith('# '):
+            text = line[2:].strip()
+            story.append(Paragraph(text, title_style))
+            story.append(Spacer(1, 0.2*inch))
+        
+        # Heading 2 (## )
+        elif line.startswith('## '):
+            text = line[3:].strip()
+            story.append(Spacer(1, 0.1*inch))
+            story.append(Paragraph(text, heading_style))
+        
+        # Heading 3 (### )
+        elif line.startswith('### '):
+            text = line[4:].strip()
+            story.append(Paragraph(text, subheading_style))
+        
+        # Horizontal rule
+        elif line.startswith('---'):
+            story.append(Spacer(1, 0.1*inch))
+            from reportlab.platypus import HRFlowable
+            story.append(HRFlowable(width="100%", thickness=1, color=colors.grey))
+            story.append(Spacer(1, 0.1*inch))
+        
+        # Table
+        elif line.startswith('|') and i + 1 < len(lines) and lines[i + 1].strip().startswith('|'):
+            table_data = []
+            while i < len(lines) and lines[i].strip().startswith('|'):
+                row = [cell.strip() for cell in lines[i].split('|')[1:-1]]
+                # Skip separator row
+                if not all(set(cell.replace('-', '').strip()) == set() or cell.strip() == '' for cell in row):
+                    table_data.append(row)
+                i += 1
+            
+            if table_data:
+                t = Table(table_data)
+                t.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E86AB')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.grey)
+                ]))
+                story.append(t)
+                story.append(Spacer(1, 0.2*inch))
+            continue
+        
+        # Bold text
+        elif line.startswith('**') and line.endswith('**'):
+            text = line[2:-2]
+            p = Paragraph(f"<b>{text}</b>", body_style)
+            story.append(p)
+        
+        # List item
+        elif line.startswith('- '):
+            text = line[2:].strip()
+            p = Paragraph(f"• {text}", body_style)
+            story.append(p)
+        
+        # Numbered list
+        elif re.match(r'^\d+\.', line):
+            text = line.split('.', 1)[1].strip()
+            p = Paragraph(f"{line.split('.')[0]}. {text}", body_style)
+            story.append(p)
+        
+        # Regular paragraph
+        else:
+            # Clean up markdown formatting
+            text = line.replace('**', '<b>').replace('**', '</b>')
+            text = text.replace('`', '<font name="Courier">')
+            text = text.replace('`', '</font>')
+            p = Paragraph(text, body_style)
+            story.append(p)
+        
+        i += 1
+    
+    # Build PDF
+    doc.build(story)
+    
+    pdf_data = buffer.getvalue()
+    buffer.close()
+    return pdf_data
+
+
 def _generate_research_paper(discovery: Dict[str, Any]) -> str:
     """Generate a research paper in Markdown format for a discovery."""
     
@@ -434,6 +650,11 @@ def _discover_angle(angle, discovery_type):
             'full_results': results
         }
         
+        # Generate descriptive title - do it before saving
+        temp_discovery = {'type': discovery_type, 'data': discovery_data}
+        title = _generate_discovery_title(temp_discovery)
+        discovery_data['title'] = title
+        
         discovery_id = discovery_manager.save_discovery(discovery_data, discovery_type)
         
         daemon_status['last_discovery'] = datetime.utcnow().isoformat()
@@ -488,6 +709,11 @@ def _discover_with_params(size, angle, discovery_type):
             'summary': summary,
             'full_results': results
         }
+        
+        # Generate descriptive title
+        temp_discovery = {'type': discovery_type, 'data': discovery_data}
+        title = _generate_discovery_title(temp_discovery)
+        discovery_data['title'] = title
         
         discovery_id = discovery_manager.save_discovery(discovery_data, discovery_type)
         
@@ -1366,7 +1592,37 @@ def download_discovery(discovery_id):
 
 @app.route('/api/discoveries/<discovery_id>/paper')
 def get_discovery_paper(discovery_id):
-    """Generate and download research paper for a discovery."""
+    """Generate and download research paper for a discovery (PDF format)."""
+    try:
+        discovery = discovery_manager.get_by_id(discovery_id)
+        if not discovery:
+            return jsonify({'error': 'Discovery not found'}), 404
+        
+        # Generate research paper markdown
+        paper_markdown = _generate_research_paper(discovery)
+        
+        # Convert to PDF
+        pdf_bytes = _convert_markdown_to_pdf(paper_markdown, discovery_id)
+        
+        pdf_buffer = io.BytesIO(pdf_bytes)
+        pdf_buffer.seek(0)
+        
+        filename = f"research_paper_{discovery_id}.pdf"
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        logger.error(f"Error generating PDF paper for {discovery_id}: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/discoveries/<discovery_id>/paper/markdown')
+def get_discovery_paper_markdown(discovery_id):
+    """Generate and download research paper for a discovery (Markdown format)."""
     try:
         discovery = discovery_manager.get_by_id(discovery_id)
         if not discovery:
@@ -1385,7 +1641,7 @@ def get_discovery_paper(discovery_id):
             download_name=filename
         )
     except Exception as e:
-        logger.error(f"Error generating paper for {discovery_id}: {e}")
+        logger.error(f"Error generating markdown paper for {discovery_id}: {e}")
         return jsonify({'error': str(e)}), 500
 
 

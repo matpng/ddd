@@ -248,19 +248,41 @@
             </div>
         </section>
 
-        <!-- Filter Bar -->
+        <!-- Filter and View Controls Bar -->
         <section class="filter-bar">
-            <select id="typeFilter" aria-label="Filter discoveries by type">
-                <option value="all">All Types</option>
-                <option value="autonomous_angle_sweep">Angle Sweep</option>
-                <option value="multi_axis">Multi-Axis</option>
-                <option value="parameter_exploration">Parameter Exploration</option>
-            </select>
-            <select id="sortOrder" aria-label="Sort discoveries by date">
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-            </select>
-            <button class="btn btn-secondary btn-small" onclick="loadDiscoveries()">🔄 Refresh</button>
+            <div class="filter-controls">
+                <select id="typeFilter" aria-label="Filter discoveries by type" onchange="filterDiscoveries()">
+                    <option value="all">All Types</option>
+                    <option value="autonomous_angle_sweep">Angle Sweep</option>
+                    <option value="golden_ratio_sweep">Golden Ratio</option>
+                    <option value="symmetry_sweep">Symmetry</option>
+                    <option value="parameter_sweep">Parameter</option>
+                    <option value="multi_axis">Multi-Axis</option>
+                </select>
+                <select id="sortOrder" aria-label="Sort discoveries by date" onchange="filterDiscoveries()">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+                <button class="btn btn-secondary btn-small" onclick="loadDiscoveries()">🔄 Refresh</button>
+            </div>
+            <div class="view-controls">
+                <button id="gridViewBtn" class="btn btn-secondary btn-small active" onclick="setView('grid')" title="Grid View">
+                    ⊞ Grid
+                </button>
+                <button id="listViewBtn" class="btn btn-secondary btn-small" onclick="setView('list')" title="List View">
+                    ☰ List
+                </button>
+            </div>
+        </section>
+
+        <!-- Pagination Controls -->
+        <section id="paginationTop" class="pagination hidden">
+            <button class="btn btn-secondary btn-small" onclick="prevPage()" id="prevBtn">← Previous</button>
+            <span class="pagination-info">
+                Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                (<span id="showingCount">0</span> of <span id="totalCount">0</span> discoveries)
+            </span>
+            <button class="btn btn-secondary btn-small" onclick="nextPage()" id="nextBtn">Next →</button>
         </section>
 
         <!-- Loading State -->
@@ -397,7 +419,11 @@
 
     <script>
         let discoveries = [];
+        let filteredDiscoveries = [];
         let stats = {};
+        let currentView = 'grid';
+        let currentPage = 1;
+        let itemsPerPage = 12;
 
         // Load status and discoveries on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -461,7 +487,7 @@
                 document.getElementById('discoveriesGrid').classList.add('hidden');
                 document.getElementById('emptyState').classList.add('hidden');
                 
-                const response = await fetch('/api/discoveries/latest?count=50');
+                const response = await fetch('/api/discoveries/latest?count=100');
                 const data = await response.json();
                 
                 // Extract discoveries array from response
@@ -472,8 +498,7 @@
                 if (discoveries.length === 0) {
                     document.getElementById('emptyState').classList.remove('hidden');
                 } else {
-                    document.getElementById('discoveriesGrid').classList.remove('hidden');
-                    renderDiscoveries();
+                    filterDiscoveries();
                 }
                 
             } catch (error) {
@@ -483,14 +508,95 @@
             }
         }
 
+        function filterDiscoveries() {
+            const typeFilter = document.getElementById('typeFilter').value;
+            const sortOrder = document.getElementById('sortOrder').value;
+            
+            // Filter by type
+            filteredDiscoveries = typeFilter === 'all' 
+                ? [...discoveries]
+                : discoveries.filter(d => d.type === typeFilter);
+            
+            // Sort
+            filteredDiscoveries.sort((a, b) => {
+                const dateA = new Date(a.timestamp);
+                const dateB = new Date(b.timestamp);
+                return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+            
+            // Reset to first page
+            currentPage = 1;
+            renderDiscoveries();
+        }
+
         function renderDiscoveries() {
             const grid = document.getElementById('discoveriesGrid');
             grid.innerHTML = '';
             
-            discoveries.forEach(discovery => {
+            // Calculate pagination
+            const totalItems = filteredDiscoveries.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = Math.min(startIdx + itemsPerPage, totalItems);
+            const pageDiscoveries = filteredDiscoveries.slice(startIdx, endIdx);
+            
+            // Update pagination controls
+            updatePagination(totalItems, totalPages, startIdx, endIdx);
+            
+            // Apply view class
+            grid.className = currentView === 'list' ? 'discovery-grid list-view' : 'discovery-grid';
+            
+            // Render cards
+            pageDiscoveries.forEach(discovery => {
                 const card = createDiscoveryCard(discovery);
                 grid.appendChild(card);
             });
+            
+            grid.classList.remove('hidden');
+        }
+
+        function updatePagination(totalItems, totalPages, startIdx, endIdx) {
+            const paginationTop = document.getElementById('paginationTop');
+            
+            if (totalItems > itemsPerPage) {
+                paginationTop.classList.remove('hidden');
+                document.getElementById('currentPage').textContent = currentPage;
+                document.getElementById('totalPages').textContent = totalPages;
+                document.getElementById('showingCount').textContent = endIdx - startIdx;
+                document.getElementById('totalCount').textContent = totalItems;
+                
+                document.getElementById('prevBtn').disabled = currentPage === 1;
+                document.getElementById('nextBtn').disabled = currentPage === totalPages;
+            } else {
+                paginationTop.classList.add('hidden');
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredDiscoveries.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderDiscoveries();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderDiscoveries();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function setView(view) {
+            currentView = view;
+            
+            // Update button states
+            document.getElementById('gridViewBtn').classList.toggle('active', view === 'grid');
+            document.getElementById('listViewBtn').classList.toggle('active', view === 'list');
+            
+            renderDiscoveries();
         }
 
         function createDiscoveryCard(discovery) {
@@ -502,47 +608,42 @@
             
             // Extract summary data
             const summary = discovery.data?.summary || {};
+            const title = discovery.data?.title || formatType(discovery.type) + ' Discovery';
             
             card.innerHTML = `
                 <div class="discovery-header">
-                    <span class="discovery-type">${formatType(discovery.type)}</span>
-                    <span class="discovery-time">${timeStr}</span>
+                    <div class="discovery-title">${title}</div>
+                    <div class="discovery-meta">
+                        <span class="discovery-badge">${formatType(discovery.type)}</span>
+                        <span>${timeStr}</span>
+                    </div>
                 </div>
-                
-                <div class="discovery-details">
-                    <div class="detail-row">
-                        <span class="detail-label">Discovery ID</span>
-                        <span class="detail-value">${discovery.id}</span>
+                <div class="discovery-content">
+                    <div class="discovery-stat">
+                        <div class="discovery-stat-label">Unique Points</div>
+                        <div class="discovery-stat-value">${summary.unique_points || 'N/A'}</div>
                     </div>
-                    ${discovery.data?.angle ? `
-                    <div class="detail-row">
-                        <span class="detail-label">Angle</span>
-                        <span class="detail-value">${discovery.data.angle}°</span>
+                    <div class="discovery-stat">
+                        <div class="discovery-stat-label">Golden Ratio</div>
+                        <div class="discovery-stat-value">${summary.golden_ratio_candidates || 0}</div>
                     </div>
-                    ` : ''}
-                    ${summary.unique_points ? `
-                    <div class="detail-row">
-                        <span class="detail-label">Unique Points</span>
-                        <span class="detail-value">${summary.unique_points}</span>
+                    <div class="discovery-stat">
+                        <div class="discovery-stat-label">Unique Distances</div>
+                        <div class="discovery-stat-value">${summary.unique_distances || 'N/A'}</div>
                     </div>
-                    ` : ''}
-                    ${summary.unique_distances ? `
-                    <div class="detail-row">
-                        <span class="detail-label">Unique Distances</span>
-                        <span class="detail-value">${summary.unique_distances}</span>
-                    </div>
-                    ` : ''}
-                    ${summary.golden_ratio_present !== undefined ? `
-                    <div class="detail-row">
-                        <span class="detail-label">Golden Ratio</span>
-                        <span class="detail-value">${summary.golden_ratio_present ? '✅ Present' : '❌ Absent'}</span>
-                    </div>
+                    ${summary.exceptional ? `
+                        <div class="discovery-stat" style="grid-column: 1 / -1;">
+                            <div class="discovery-stat-label">🌟 Special</div>
+                            <div class="discovery-stat-value" style="font-size: 0.9rem; color: var(--accent-color);">
+                                ${summary.exceptional}
+                            </div>
+                        </div>
                     ` : ''}
                 </div>
                 
                 <div class="discovery-actions">
-                    <button class="btn btn-primary btn-small" onclick="downloadPaper('${discovery.id}')" title="Download Research Paper">
-                        📄 Paper
+                    <button class="btn btn-primary btn-small" onclick="downloadPaper('${discovery.id}')" title="Download PDF Research Paper">
+                        📄 PDF
                     </button>
                     <button class="btn btn-secondary btn-small" onclick="viewDiscovery('${discovery.id}')">
                         👁️ View
