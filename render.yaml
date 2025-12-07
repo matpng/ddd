@@ -5,8 +5,8 @@ services:
   # Web Service (Orion Octave Cubes)
   - type: web
     name: orion-octave-cubes
-    env: docker  # Use Docker build (recommended for numpy/scipy/scikit-learn)
-    # Alternative: env: python (uses buildpack, requires runtime.txt)
+    runtime: docker  # Use Docker build (recommended for numpy/scipy/scikit-learn)
+    # Alternative: runtime: python (uses buildpack, requires runtime.txt)
     
     # Docker build settings (if env: docker)
     dockerfilePath: ./Dockerfile
@@ -36,31 +36,31 @@ services:
         value: production
       
       - key: FLASK_DEBUG
-        value: false
+        value: "false"
       
       - key: SECRET_KEY
         generateValue: true  # Render auto-generates secure random key
       
       - key: ENABLE_AUTONOMOUS
-        value: true
+        value: "true"
       
       - key: ENABLE_ML_DISCOVERY
-        value: true
+        value: "true"
       
       - key: DISCOVERY_INTERVAL
-        value: 3600  # 1 hour between discoveries
+        value: "3600"  # 1 hour between discoveries
       
       - key: ML_ANALYSIS_INTERVAL
-        value: 7200  # 2 hours between ML analysis
+        value: "7200"  # 2 hours between ML analysis
       
       - key: LOG_LEVEL
         value: INFO
       
       - key: CACHE_ENABLED
-        value: true
+        value: "true"
       
       - key: CACHE_MAX_SIZE
-        value: 100
+        value: "100"
       
       - key: MAX_DISTANCE_PAIRS
         value: 50000

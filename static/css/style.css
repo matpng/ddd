@@ -512,3 +512,8 @@ body {
 .match-strong { color: var(--success-color); }
 .match-moderate { color: var(--warning-color); }
 .match-weak { color: var(--danger-color); }
+
+/* Utility Classes */
+.hidden { display: none !important; }
+.mt-1 { margin-top: 1rem; }
+.text-sm { font-size: 0.875rem; }

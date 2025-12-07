@@ -250,13 +250,13 @@
 
         <!-- Filter Bar -->
         <section class="filter-bar">
-            <select id="typeFilter">
+            <select id="typeFilter" aria-label="Filter discoveries by type">
                 <option value="all">All Types</option>
                 <option value="autonomous_angle_sweep">Angle Sweep</option>
                 <option value="multi_axis">Multi-Axis</option>
                 <option value="parameter_exploration">Parameter Exploration</option>
             </select>
-            <select id="sortOrder">
+            <select id="sortOrder" aria-label="Sort discoveries by date">
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
             </select>
@@ -270,20 +270,20 @@
         </div>
 
         <!-- Discoveries Grid -->
-        <section id="discoveriesGrid" class="discovery-grid" style="display: none;">
+        <section id="discoveriesGrid" class="discovery-grid hidden">
             <!-- Discoveries will be loaded here -->
         </section>
 
         <!-- Empty State -->
-        <div id="emptyState" class="empty-state" style="display: none;">
+        <div id="emptyState" class="empty-state hidden">
             <div class="empty-state-icon">🔍</div>
             <h3>No Discoveries Yet</h3>
             <p>The autonomous daemon is running and will create discoveries soon.</p>
-            <p style="margin-top: 1rem; font-size: 0.875rem;">Check back in a few minutes!</p>
+            <p class="mt-1 text-sm">Check back in a few minutes!</p>
         </div>
 
         <!-- Discovery Detail Modal -->
-        <div id="discoveryModal" class="modal" style="display: none;">
+        <div id="discoveryModal" class="modal hidden">
             <div class="modal-content">
                 <span class="close-modal" onclick="closeModal()">&times;</span>
                 <div id="modalBody">
@@ -457,9 +457,9 @@
 
         async function loadDiscoveries() {
             try {
-                document.getElementById('loadingState').style.display = 'block';
-                document.getElementById('discoveriesGrid').style.display = 'none';
-                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('loadingState').classList.remove('hidden');
+                document.getElementById('discoveriesGrid').classList.add('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
                 
                 const response = await fetch('/api/discoveries/latest?count=50');
                 const data = await response.json();
@@ -467,19 +467,19 @@
                 // Extract discoveries array from response
                 discoveries = data.discoveries || [];
                 
-                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('loadingState').classList.add('hidden');
                 
                 if (discoveries.length === 0) {
-                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('emptyState').classList.remove('hidden');
                 } else {
-                    document.getElementById('discoveriesGrid').style.display = 'grid';
+                    document.getElementById('discoveriesGrid').classList.remove('hidden');
                     renderDiscoveries();
                 }
                 
             } catch (error) {
                 console.error('Error loading discoveries:', error);
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
             }
         }
 
@@ -673,7 +673,7 @@
                 `;
                 
                 // Show modal
-                document.getElementById('discoveryModal').style.display = 'block';
+                document.getElementById('discoveryModal').classList.remove('hidden');
                 
             } catch (error) {
                 console.error('Error viewing discovery:', error);
@@ -682,7 +682,7 @@
         }
 
         function closeModal() {
-            document.getElementById('discoveryModal').style.display = 'none';
+            document.getElementById('discoveryModal').classList.add('hidden');
         }
 
         // Close modal when clicking outside
