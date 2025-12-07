@@ -112,47 +112,62 @@ def run_autonomous_daemon():
     """Background daemon that continuously runs autonomous discoveries."""
     global daemon_status
     
-    daemon_monitor.start()
-    daemon_status['running'] = True
-    daemon_status['started_at'] = datetime.utcnow().isoformat()
-    logger.info("Starting autonomous discovery daemon...")
-    
-    discovery_interval = int(os.environ.get('DISCOVERY_INTERVAL', '3600'))  # Default 1 hour
-    cycle_count = 0
-    
-    while daemon_status['running']:
-        try:
-            cycle_count += 1
-            
-            # Rotate through different discovery modes
-            mode = cycle_count % 4
-            
-            if mode == 0:
-                # Mode 1: Standard angle sweep (original)
-                _run_angle_sweep_discovery()
-            elif mode == 1:
-                # Mode 2: Fine-grained sweep around golden ratio angles
-                _run_golden_ratio_discovery()
-            elif mode == 2:
-                # Mode 3: Special symmetry angles
-                _run_symmetry_discovery()
-            elif mode == 3:
-                # Mode 4: Parameter variation (different cube sizes)
-                _run_parameter_sweep_discovery()
-            
-            logger.info(f"Autonomous discovery cycle {cycle_count} complete. Sleeping for {discovery_interval}s...")
-            
-            # Sleep in chunks to allow for graceful shutdown
-            for _ in range(discovery_interval):
-                if not daemon_status['running']:
-                    break
-                time.sleep(1)
+    try:
+        daemon_monitor.start()
+        daemon_status['running'] = True
+        daemon_status['started_at'] = datetime.utcnow().isoformat()
+        logger.info("Starting autonomous discovery daemon...")
+        
+        discovery_interval = int(os.environ.get('DISCOVERY_INTERVAL', '3600'))  # Default 1 hour
+        warmup_delay = int(os.environ.get('DAEMON_WARMUP_DELAY', '60'))  # Default 60s warmup
+        
+        # Warmup delay to let app fully initialize
+        logger.info(f"Daemon warmup: waiting {warmup_delay}s before first discovery...")
+        time.sleep(warmup_delay)
+        logger.info("Daemon warmup complete. Starting discovery cycles...")
+        
+        cycle_count = 0
+        
+        while daemon_status['running']:
+            try:
+                cycle_count += 1
+                logger.info(f"Starting discovery cycle {cycle_count}...")
                 
-        except Exception as e:
-            logger.error(f"Error in autonomous daemon: {e}")
-            time.sleep(60)  # Wait a minute before retrying
+                # Rotate through different discovery modes
+                mode = cycle_count % 4
+                
+                if mode == 0:
+                    # Mode 1: Standard angle sweep (original)
+                    _run_angle_sweep_discovery()
+                elif mode == 1:
+                    # Mode 2: Fine-grained sweep around golden ratio angles
+                    _run_golden_ratio_discovery()
+                elif mode == 2:
+                    # Mode 3: Special symmetry angles
+                    _run_symmetry_discovery()
+                elif mode == 3:
+                    # Mode 4: Parameter variation (different cube sizes)
+                    _run_parameter_sweep_discovery()
+                
+                logger.info(f"Autonomous discovery cycle {cycle_count} complete. Sleeping for {discovery_interval}s...")
+                
+                # Sleep in chunks to allow for graceful shutdown
+                for _ in range(discovery_interval):
+                    if not daemon_status['running']:
+                        break
+                    time.sleep(1)
+                    
+            except Exception as e:
+                logger.error(f"Error in discovery cycle {cycle_count}: {e}", exc_info=True)
+                # Wait before retrying
+                time.sleep(60)
     
-    logger.info("Autonomous discovery daemon stopped.")
+    except Exception as e:
+        logger.error(f"Fatal error in autonomous daemon: {e}", exc_info=True)
+        daemon_status['running'] = False
+    
+    finally:
+        logger.info("Autonomous discovery daemon stopped.")
 
 
 def _run_angle_sweep_discovery():
@@ -328,20 +343,25 @@ def _discover_with_params(size, angle, discovery_type):
 
 def start_autonomous_daemon():
     """Start the autonomous daemon in a background thread."""
-    if os.environ.get('ENABLE_AUTONOMOUS', 'true').lower() == 'true':
-        daemon_thread = threading.Thread(target=run_autonomous_daemon, daemon=True)
-        daemon_thread.start()
-        logger.info("Autonomous daemon thread started")
-        
-        # Start ML background analysis if enabled
-        if os.environ.get('ENABLE_ML_DISCOVERY', 'true').lower() == 'true':
-            ml_integration.start_background_analysis(interval=7200)  # Every 2 hours
-            logger.info("ML background analysis started")
-        
-        # Start Prometheus metrics updater
-        start_metrics_updater(discovery_manager, daemon_monitor, analysis_cache, interval=30)
-    else:
-        logger.info("Autonomous daemon disabled by configuration")
+    try:
+        if os.environ.get('ENABLE_AUTONOMOUS', 'true').lower() == 'true':
+            logger.info("ENABLE_AUTONOMOUS=true, starting daemon thread...")
+            daemon_thread = threading.Thread(target=run_autonomous_daemon, daemon=True)
+            daemon_thread.start()
+            logger.info("✓ Autonomous daemon thread started successfully")
+            
+            # Start ML background analysis if enabled
+            if os.environ.get('ENABLE_ML_DISCOVERY', 'true').lower() == 'true':
+                ml_integration.start_background_analysis(interval=7200)  # Every 2 hours
+                logger.info("✓ ML background analysis started")
+            
+            # Start Prometheus metrics updater
+            start_metrics_updater(discovery_manager, daemon_monitor, analysis_cache, interval=30)
+            logger.info("✓ Prometheus metrics updater started")
+        else:
+            logger.info("Autonomous daemon disabled by configuration (ENABLE_AUTONOMOUS=false)")
+    except Exception as e:
+        logger.error(f"Failed to start autonomous daemon: {e}", exc_info=True)
 
 
 # Start daemon when module is imported (works with gunicorn)
@@ -940,6 +960,66 @@ def search_discoveries():
         })
     except Exception as e:
         logger.error(f"Error searching discoveries: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/daemon/trigger', methods=['POST'])
+@rate_limit('analyze')
+def trigger_discovery():
+    """Manually trigger a single discovery (for testing/debugging)."""
+    try:
+        # Get angle from request or use default
+        data = request.get_json() or {}
+        angle = float(data.get('angle', 45.0))
+        
+        logger.info(f"Manual discovery trigger requested for angle={angle}°")
+        
+        # Run discovery in background thread
+        def run_manual_discovery():
+            try:
+                logger.info(f"Running manual discovery at {angle}°...")
+                _discover_angle(angle, 'manual_trigger')
+                logger.info(f"Manual discovery at {angle}° completed")
+            except Exception as e:
+                logger.error(f"Manual discovery failed: {e}", exc_info=True)
+        
+        discovery_thread = threading.Thread(target=run_manual_discovery, daemon=True)
+        discovery_thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Discovery triggered for angle {angle}°',
+            'note': 'Check /api/discoveries/latest in a few seconds'
+        })
+    except Exception as e:
+        logger.error(f"Error triggering discovery: {e}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/daemon/start', methods=['POST'])
+def start_daemon():
+    """Manually start the autonomous daemon (if not running)."""
+    global daemon_status
+    
+    try:
+        if daemon_status['running']:
+            return jsonify({
+                'success': False,
+                'error': 'Daemon already running',
+                'status': daemon_status
+            }), 400
+        
+        logger.info("Manual daemon start requested...")
+        daemon_thread = threading.Thread(target=run_autonomous_daemon, daemon=True)
+        daemon_thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Daemon started',
+            'note': 'Check /api/daemon/health for status'
+        })
+    except Exception as e:
+        logger.error(f"Error starting daemon: {e}", exc_info=True)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
