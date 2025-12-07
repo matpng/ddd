@@ -13,7 +13,80 @@ const resetBtn = document.getElementById('resetBtn');
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setupTabs();
+    startAutonomousStatusUpdates();
 });
+
+// Auto-refresh autonomous status
+let statusUpdateInterval = null;
+
+function startAutonomousStatusUpdates() {
+    // Update immediately
+    updateAutonomousStatus();
+    
+    // Update every 10 seconds
+    statusUpdateInterval = setInterval(updateAutonomousStatus, 10000);
+}
+
+async function updateAutonomousStatus() {
+    try {
+        const response = await fetch('/api/discoveries/status');
+        
+        // Check if response is ok
+        if (!response.ok) {
+            console.error(`Status check failed: ${response.status} ${response.statusText}`);
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const status = data.status || {};
+            const health = data.health || {};
+            
+            // Update status icon
+            const icon = document.getElementById('autonomousIcon');
+            if (icon) {
+                const isHealthy = status.running && (health.heartbeat_healthy !== false);
+                icon.textContent = isHealthy ? '🟢' : '🔴';
+            }
+            
+            // Update status text
+            const statusText = document.getElementById('autonomousStatus');
+            if (statusText) {
+                if (status.running) {
+                    const healthScore = health.health_score || 0;
+                    statusText.textContent = `Running • Health: ${healthScore}/100`;
+                } else {
+                    statusText.textContent = 'Stopped';
+                }
+            }
+            
+            // Update counts
+            const countToday = document.getElementById('autonomousCount');
+            if (countToday) {
+                countToday.textContent = status.discoveries_today || 0;
+            }
+            
+            const countTotal = document.getElementById('autonomousTotal');
+            if (countTotal) {
+                countTotal.textContent = status.total_discoveries || 0;
+            }
+        } else {
+            console.error('Status update failed:', data.error);
+        }
+    } catch (error) {
+        console.error('Error updating autonomous status:', error);
+        // Set offline indicators
+        const icon = document.getElementById('autonomousIcon');
+        if (icon) {
+            icon.textContent = '🔴';
+        }
+        const statusText = document.getElementById('autonomousStatus');
+        if (statusText) {
+            statusText.textContent = 'Offline - Retrying...';
+        }
+    }
+}
 
 // Event Listeners
 function setupEventListeners() {

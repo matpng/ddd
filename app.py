@@ -23,6 +23,18 @@ from mpl_toolkits.mplot3d import Axes3D
 from orion_octave_test import main as run_analysis
 from config import Config
 from discovery_manager import DiscoveryManager
+from daemon_monitor import daemon_monitor
+from ml_integration import initialize_ml_integration
+from security_middleware import (
+    initialize_security,
+    rate_limit,
+    validate_request
+)
+from prometheus_metrics import (
+    setup_metrics,
+    start_metrics_updater,
+    metrics as prometheus_metrics
+)
 import threading
 import time
 
@@ -38,6 +50,12 @@ logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Initialize security middleware
+initialize_security(app)
+
+# Initialize Prometheus metrics
+setup_metrics(app)
 
 # Store analysis results with size limit
 class LRUCache:
@@ -73,6 +91,9 @@ analysis_cache = LRUCache(max_size=Config.CACHE_MAX_SIZE) if Config.CACHE_ENABLE
 # Initialize discovery manager
 discovery_manager = DiscoveryManager()
 
+# Initialize ML integration
+ml_integration = initialize_ml_integration(discovery_manager)
+
 # Autonomous daemon status
 daemon_status = {
     'running': False,
@@ -91,6 +112,7 @@ def run_autonomous_daemon():
     """Background daemon that continuously runs autonomous discoveries."""
     global daemon_status
     
+    daemon_monitor.start()
     daemon_status['running'] = True
     daemon_status['started_at'] = datetime.utcnow().isoformat()
     logger.info("Starting autonomous discovery daemon...")
@@ -199,7 +221,10 @@ def _run_parameter_sweep_discovery():
 
 def _discover_angle(angle, discovery_type):
     """Helper function to discover a single angle configuration."""
+    start_time = time.time()
     try:
+        daemon_monitor.heartbeat()
+        
         results = run_analysis(
             side=2.0,
             angle=angle,
@@ -240,6 +265,14 @@ def _discover_angle(angle, discovery_type):
         daemon_status['discoveries_today'] += 1
         daemon_status['total_discoveries'] += 1
         
+        # Record success in monitor
+        duration = time.time() - start_time
+        daemon_monitor.record_discovery(discovery_id, duration, success=True)
+        daemon_monitor.update_resources()
+        
+        # Record in Prometheus metrics
+        prometheus_metrics.record_discovery(duration)
+        
         exceptional = summary.get('exceptional', '')
         log_msg = f"Saved discovery: {discovery_id} (angle={angle}°"
         if exceptional:
@@ -248,6 +281,8 @@ def _discover_angle(angle, discovery_type):
         logger.info(log_msg)
         
     except Exception as e:
+        duration = time.time() - start_time
+        daemon_monitor.record_error(str(e), 'discovery_error')
         logger.error(f"Error in discovery for angle {angle}: {e}")
 
 
@@ -297,6 +332,14 @@ def start_autonomous_daemon():
         daemon_thread = threading.Thread(target=run_autonomous_daemon, daemon=True)
         daemon_thread.start()
         logger.info("Autonomous daemon thread started")
+        
+        # Start ML background analysis if enabled
+        if os.environ.get('ENABLE_ML_DISCOVERY', 'true').lower() == 'true':
+            ml_integration.start_background_analysis(interval=7200)  # Every 2 hours
+            logger.info("ML background analysis started")
+        
+        # Start Prometheus metrics updater
+        start_metrics_updater(discovery_manager, daemon_monitor, analysis_cache, interval=30)
     else:
         logger.info("Autonomous daemon disabled by configuration")
 
@@ -315,6 +358,22 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/health')
+def health():
+    """Lightweight health endpoint for load balancers and platform health checks."""
+    # Keep this lightweight: return quickly without heavy computation
+    try:
+        return jsonify({'success': True, 'status': 'ok'}), 200
+    except Exception:
+        return jsonify({'success': False}), 500
+
+
+@app.route('/healthz')
+def healthz():
+    """Compatibility alias for health checks."""
+    return health()
+
+
 @app.route('/discoveries')
 def discoveries():
     """Autonomous discoveries dashboard page."""
@@ -322,6 +381,8 @@ def discoveries():
 
 
 @app.route('/api/analyze', methods=['POST'])
+@rate_limit('analyze')
+@validate_request(max_payload_kb=50)
 def analyze():
     """Run geometric analysis with provided parameters."""
     try:
@@ -463,6 +524,7 @@ def generate_plot(plot_type, cache_key):
 
 
 @app.route('/api/download/<cache_key>')
+@rate_limit('download')
 def download_results(cache_key):
     """Download results as JSON."""
     try:
@@ -731,12 +793,67 @@ def discovery_status():
         if latest:
             daemon_status['last_discovery'] = latest.get('timestamp')
         
+        # Add monitor status with fallback
+        try:
+            monitor_status = daemon_monitor.get_status()
+        except Exception as monitor_error:
+            logger.warning(f"Could not get monitor status: {monitor_error}")
+            monitor_status = {
+                'is_running': False,
+                'health_score': 0,
+                'heartbeat_healthy': False,
+                'uptime_seconds': None,
+                'statistics': {
+                    'total_discoveries': 0,
+                    'total_errors': 0,
+                    'success_rate': 0
+                }
+            }
+        
         return jsonify({
             'success': True,
-            'status': daemon_status
+            'status': daemon_status,
+            'health': monitor_status
         })
     except Exception as e:
-        logger.error(f"Error getting discovery status: {e}")
+        logger.error(f"Error getting discovery status: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'status': daemon_status,
+            'health': {
+                'is_running': False,
+                'health_score': 0,
+                'heartbeat_healthy': False
+            }
+        }), 500
+
+
+@app.route('/api/daemon/health')
+def daemon_health():
+    """Get detailed daemon health information."""
+    try:
+        health = daemon_monitor.get_status()
+        return jsonify({
+            'success': True,
+            'health': health
+        })
+    except Exception as e:
+        logger.error(f"Error getting daemon health: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/daemon/metrics')
+def daemon_metrics():
+    """Get daemon performance metrics."""
+    try:
+        metrics = daemon_monitor.get_metrics()
+        return jsonify({
+            'success': True,
+            'metrics': metrics
+        })
+    except Exception as e:
+        logger.error(f"Error getting daemon metrics: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -807,6 +924,7 @@ def get_discovery_stats():
 
 
 @app.route('/api/discoveries/search')
+@rate_limit('search')
 def search_discoveries():
     """Search discoveries with advanced filtering."""
     try:
@@ -850,6 +968,69 @@ def get_exceptional_discoveries():
         })
     except Exception as e:
         logger.error(f"Error getting exceptional discoveries: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# MACHINE LEARNING API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/ml/analyze', methods=['POST'])
+@rate_limit('ml_analyze')
+@validate_request(max_payload_kb=10)
+def ml_analyze():
+    """Run ML pattern analysis on discoveries."""
+    try:
+        min_discoveries = int(request.args.get('min_discoveries', 10))
+        
+        logger.info(f"Starting ML analysis (min_discoveries={min_discoveries})")
+        result = ml_integration.analyze_discoveries(min_discoveries)
+        
+        if result is None:
+            return jsonify({
+                'success': False,
+                'error': 'Insufficient discoveries for ML analysis'
+            }), 400
+        
+        # Record ML analysis in metrics
+        prometheus_metrics.record_ml_analysis()
+        
+        return jsonify({
+            'success': True,
+            'analysis': result
+        })
+    except Exception as e:
+        logger.error(f"Error in ML analysis: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/ml/patterns')
+def ml_patterns():
+    """Get discovered ML patterns."""
+    try:
+        patterns = ml_integration.get_patterns()
+        return jsonify({
+            'success': True,
+            'count': len(patterns),
+            'patterns': patterns
+        })
+    except Exception as e:
+        logger.error(f"Error getting ML patterns: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/ml/status')
+def ml_status():
+    """Get ML integration status."""
+    try:
+        last_analysis = ml_integration.get_last_analysis()
+        return jsonify({
+            'success': True,
+            'is_running': ml_integration.is_running,
+            'last_analysis': last_analysis
+        })
+    except Exception as e:
+        logger.error(f"Error getting ML status: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -919,6 +1100,7 @@ def get_analysis_summary():
 
 
 @app.route('/api/discoveries/download/<discovery_id>')
+@rate_limit('download')
 def download_discovery(discovery_id):
     """Download a discovery as JSON."""
     try:

@@ -24,7 +24,7 @@ class BaseConfig:
     
     # Server
     HOST = os.environ.get('FLASK_HOST', '0.0.0.0')
-    PORT = int(os.environ.get('FLASK_PORT', 5000))
+    PORT = int(os.environ.get('PORT') or os.environ.get('FLASK_PORT', 5000))  # Render uses PORT
     
     # Analysis constraints
     MAX_SIDE_LENGTH = float(os.environ.get('MAX_SIDE_LENGTH', 100))

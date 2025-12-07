@@ -1,0 +1,130 @@
+# Render.com Deployment Configuration
+# See https://render.com/docs/yaml-spec
+
+services:
+  # Web Service (Orion Octave Cubes)
+  - type: web
+    name: orion-octave-cubes
+    env: docker  # Use Docker build (recommended for numpy/scipy/scikit-learn)
+    # Alternative: env: python (uses buildpack, requires runtime.txt)
+    
+    # Docker build settings (if env: docker)
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    # Build command (if env: python and not using Docker)
+    # buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    
+    # Start command (overrides Procfile if needed)
+    # startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 app:app
+    
+    # Region
+    region: oregon  # Choose: oregon, frankfurt, singapore, ohio
+    
+    # Plan (free, starter, standard, pro, etc.)
+    plan: free  # Change to starter/standard for production
+    
+    # Branch to auto-deploy from
+    branch: main
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Environment variables
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      
+      - key: FLASK_DEBUG
+        value: false
+      
+      - key: SECRET_KEY
+        generateValue: true  # Render auto-generates secure random key
+      
+      - key: ENABLE_AUTONOMOUS
+        value: true
+      
+      - key: ENABLE_ML_DISCOVERY
+        value: true
+      
+      - key: DISCOVERY_INTERVAL
+        value: 3600  # 1 hour between discoveries
+      
+      - key: ML_ANALYSIS_INTERVAL
+        value: 7200  # 2 hours between ML analysis
+      
+      - key: LOG_LEVEL
+        value: INFO
+      
+      - key: CACHE_ENABLED
+        value: true
+      
+      - key: CACHE_MAX_SIZE
+        value: 100
+      
+      - key: MAX_DISTANCE_PAIRS
+        value: 50000
+      
+      - key: MAX_DIRECTION_PAIRS
+        value: 25000
+      
+      # Optional: WakaTime API key (add as secret in Render dashboard)
+      # - key: WAKATIME_API_KEY
+      #   sync: false  # Set manually in Render dashboard
+      
+      # Gunicorn workers (optional, uses Render's default if not set)
+      - key: WEB_CONCURRENCY
+        value: 2
+      
+      - key: PYTHON_VERSION
+        value: 3.11.6
+    
+    # Auto-deploy on push to main
+    autoDeploy: true
+    
+    # Disk storage for discoveries (optional, free tier doesn't support disks)
+    # disk:
+    #   name: discoveries-data
+    #   mountPath: /app/autonomous_discoveries
+    #   sizeGB: 1
+    
+    # Build filter (only deploy when these paths change)
+    # buildFilter:
+    #   paths:
+    #     - app.py
+    #     - requirements.txt
+    #     - Dockerfile
+    #     - Procfile
+    #   ignoredPaths:
+    #     - "*.md"
+    #     - docs/**
+
+# Optional: Background worker (for long-running tasks)
+# - type: worker
+#   name: orion-discovery-worker
+#   env: docker
+#   dockerfilePath: ./Dockerfile
+#   dockerContext: .
+#   startCommand: python autonomous_discovery_daemon.py
+#   region: oregon
+#   plan: free
+#   envVars:
+#     - fromService:
+#         name: orion-octave-cubes
+#         type: web
+#         envVarKey: SECRET_KEY
+
+# Optional: Cron job (scheduled tasks)
+# - type: cron
+#   name: daily-discovery-cleanup
+#   env: docker
+#   dockerfilePath: ./Dockerfile
+#   dockerContext: .
+#   schedule: "0 2 * * *"  # 2 AM daily
+#   startCommand: python scripts/cleanup_old_discoveries.py
+#   region: oregon
+#   envVars:
+#     - fromService:
+#         name: orion-octave-cubes
+#         type: web
+#         envVarKey: SECRET_KEY
