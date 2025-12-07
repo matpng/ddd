@@ -677,7 +677,8 @@
         }
 
         function formatType(type) {
-            return type
+            if (!type) return 'Unknown';
+            return String(type)
                 .replace(/_/g, ' ')
                 .replace(/\b\w/g, l => l.toUpperCase());
         }

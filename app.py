@@ -1681,10 +1681,14 @@ def download_discovery(discovery_id):
 def get_discovery_paper(discovery_id):
     """Generate and download research paper for a discovery (PDF format)."""
     try:
+        logger.info(f"Fetching discovery for PDF: {discovery_id}")
         discovery = discovery_manager.get_by_id(discovery_id)
+        
         if not discovery:
+            logger.error(f"Discovery not found: {discovery_id}")
             return jsonify({'error': 'Discovery not found'}), 404
         
+        logger.info(f"Generating PDF for discovery: {discovery_id}")
         # Generate research paper markdown
         paper_markdown = _generate_research_paper(discovery)
         

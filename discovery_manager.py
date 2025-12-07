@@ -50,8 +50,9 @@ class DiscoveryManager:
             date_dir = self.base_dir / today
             date_dir.mkdir(exist_ok=True)
             
-            # Generate unique ID
-            timestamp = datetime.utcnow().strftime('%H%M%S')
+            # Generate unique ID with microseconds to avoid duplicates
+            now = datetime.utcnow()
+            timestamp = now.strftime('%H%M%S') + f"{now.microsecond:06d}"[:3]
             discovery_id = f"{discovery_type}_{timestamp}"
             
             # Add metadata
@@ -81,19 +82,31 @@ class DiscoveryManager:
             raise
     
     def get_latest(self, count: int = 10) -> List[Dict[str, Any]]:
-        """Get latest N discoveries."""
+        """Get latest N discoveries with full data."""
         try:
             index = self._load_json(self.index_file)
             discoveries = index.get('discoveries', [])
             # Sort by timestamp descending
             discoveries.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-            return discoveries[:count]
+            
+            # Load full data for each discovery
+            full_discoveries = []
+            for disc_summary in discoveries[:count]:
+                disc_id = disc_summary.get('id')
+                full_disc = self.get_by_id(disc_id)
+                if full_disc:
+                    full_discoveries.append(full_disc)
+                else:
+                    # Fallback to summary if full data not found
+                    full_discoveries.append(disc_summary)
+            
+            return full_discoveries
         except Exception as e:
             logger.error(f"Error getting latest discoveries: {e}")
             return []
     
     def get_all(self, limit: int = 100, offset: int = 0) -> Dict[str, Any]:
-        """Get all discoveries with pagination."""
+        """Get all discoveries with pagination and full data."""
         try:
             index = self._load_json(self.index_file)
             discoveries = index.get('discoveries', [])
@@ -102,11 +115,22 @@ class DiscoveryManager:
             total = len(discoveries)
             paginated = discoveries[offset:offset + limit]
             
+            # Load full data for paginated results
+            full_discoveries = []
+            for disc_summary in paginated:
+                disc_id = disc_summary.get('id')
+                full_disc = self.get_by_id(disc_id)
+                if full_disc:
+                    full_discoveries.append(full_disc)
+                else:
+                    # Fallback to summary
+                    full_discoveries.append(disc_summary)
+            
             return {
                 'total': total,
                 'limit': limit,
                 'offset': offset,
-                'discoveries': paginated
+                'discoveries': full_discoveries
             }
         except Exception as e:
             logger.error(f"Error getting all discoveries: {e}")
