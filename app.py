@@ -513,10 +513,29 @@ cube B around the z-axis relative to a fixed cube A. This study investigates:
 - **Spatial Configuration:** 3D coordinate system with rotation-induced symmetry
 
 ### 3.2 Distance Analysis
-- **Unique Distances:** {summary.get('unique_distances', 'N/A')}
-- **Maximum Distance:** {summary.get('max_distance', 0):.6f if isinstance(summary.get('max_distance'), (int, float)) else 'N/A'}
-- **Minimum Distance:** {summary.get('min_distance', 0):.6f if isinstance(summary.get('min_distance'), (int, float)) else 'N/A'}
-- **Mean Distance:** {summary.get('distance_mean', 0):.6f if isinstance(summary.get('distance_mean'), (int, float)) else 'N/A'}
+- **Unique Distances:** {summary.get('unique_distances', 'N/A')}"""
+    
+    # Format distance statistics safely
+    max_dist = summary.get('max_distance')
+    min_dist = summary.get('min_distance')
+    mean_dist = summary.get('distance_mean')
+    
+    if isinstance(max_dist, (int, float)):
+        paper += f"\n- **Maximum Distance:** {max_dist:.6f}"
+    else:
+        paper += "\n- **Maximum Distance:** N/A"
+    
+    if isinstance(min_dist, (int, float)):
+        paper += f"\n- **Minimum Distance:** {min_dist:.6f}"
+    else:
+        paper += "\n- **Minimum Distance:** N/A"
+    
+    if isinstance(mean_dist, (int, float)):
+        paper += f"\n- **Mean Distance:** {mean_dist:.6f}"
+    else:
+        paper += "\n- **Mean Distance:** N/A"
+    
+    paper += """
 
 ### 3.3 Angular Relationships
 """
@@ -1292,14 +1311,40 @@ def discovery_status():
 def daemon_health():
     """Get detailed daemon health information."""
     try:
+        # Get monitor health
         health = daemon_monitor.get_status()
+        
+        # Get discovery stats
+        stats = discovery_manager.get_stats()
+        
+        # Count today's discoveries
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        date_counts = stats.get('discoveries_by_date', {})
+        discoveries_today = date_counts.get(today, 0)
+        
+        # Get latest discovery info
+        latest = stats.get('latest_discovery')
+        last_discovery = latest.get('timestamp') if latest else None
+        
         return jsonify({
             'success': True,
-            'health': health
+            'running': daemon_status.get('running', False),
+            'discoveries_today': discoveries_today,
+            'total_discoveries': stats.get('total_discoveries', 0),
+            'last_discovery': last_discovery,
+            'health': health,
+            'status': daemon_status
         })
     except Exception as e:
-        logger.error(f"Error getting daemon health: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        logger.error(f"Error getting daemon health: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'running': False,
+            'discoveries_today': 0,
+            'total_discoveries': 0,
+            'last_discovery': None,
+            'error': str(e)
+        }), 500
 
 
 @app.route('/api/daemon/metrics')
