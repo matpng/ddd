@@ -439,7 +439,6 @@ def _convert_markdown_to_pdf(markdown_text: str, discovery_id: str) -> bytes:
             # Clean up markdown formatting - handle bold text
             text = line
             # Replace **text** with <b>text</b>
-            import re
             text = re.sub(r'\*\*([^\*]+)\*\*', r'<b>\1</b>', text)
             # Replace `code` with monospace font
             text = re.sub(r'`([^`]+)`', r'<font name="Courier">\1</font>', text)
