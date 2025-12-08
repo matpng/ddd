@@ -163,22 +163,25 @@ def test_cli_tool():
     import subprocess
     
     try:
+        # Get the current working directory
+        cwd = Path(__file__).parent.absolute()
+        
         # Test basic CLI execution
         result = subprocess.run(
-            ['python3', 'orion_octave_test.py', '--quiet', '--angle', '45', 
+            ['python', 'orion_octave_test.py', '--quiet', '--angle', '45', 
              '--max-distance-pairs', '5000', '--max-direction-pairs', '2000',
              '--output', 'test_output.json'],
             capture_output=True,
             text=True,
             timeout=30,
-            cwd='/workspaces/ddd'
+            cwd=str(cwd)
         )
         
         passed = result.returncode == 0
         
         if passed:
             # Check if output file was created
-            output_file = Path('/workspaces/ddd/test_output.json')
+            output_file = cwd / 'test_output.json'
             if output_file.exists():
                 with open(output_file) as f:
                     data = json.load(f)
@@ -192,6 +195,7 @@ def test_cli_tool():
             
     except Exception as e:
         test_result("CLI Tool", False, str(e))
+
 
 def print_summary():
     """Print test summary"""
