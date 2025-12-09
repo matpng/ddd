@@ -1,0 +1,11 @@
+# Installation Instructions
+
+Install system dependencies:
+```bash
+pip install psycopg2-binary
+```
+
+Add to requirements.txt:
+```
+psycopg2-binary>=2.9.0
+```
