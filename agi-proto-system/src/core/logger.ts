@@ -16,4 +16,10 @@ export class Logger {
     error(msg: string, data?: unknown) {
         console.error(`[ERROR] [${this.scope}] ${msg}`, data ?? "");
     }
+
+    debug(msg: string, data?: unknown) {
+        if (process.env.LOG_LEVEL === "debug") {
+            console.log(`[DEBUG] [${this.scope}] ${msg}`, data ?? "");
+        }
+    }
 }

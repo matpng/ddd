@@ -25,6 +25,8 @@ export const CONFIG = {
     // Web research
     RESEARCH_API_URL: process.env.RESEARCH_API_URL || "https://api.search.example.com",
     RESEARCH_API_KEY: process.env.RESEARCH_API_KEY || "",
+    WEB_RESEARCH_API_KEY: process.env.WEB_RESEARCH_API_KEY || "",
+    WEB_RESEARCH_ENGINE: process.env.WEB_RESEARCH_ENGINE || "duckduckgo",
 
     // OpenAI or LLM provider
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",

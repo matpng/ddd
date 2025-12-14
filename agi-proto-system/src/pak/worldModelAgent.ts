@@ -140,7 +140,7 @@ export class WorldModelAgent {
 
         for (const searchQuery of queries) {
             try {
-                const results = await this.researchService.search(searchQuery);
+                const results = await this.researchService.researchTopic(searchQuery, 3);
 
                 // Use LLM to extract relevant factors
                 const messages: LLMMessage[] = [
@@ -153,7 +153,7 @@ export class WorldModelAgent {
                         content: `Search Query: ${searchQuery}
 
 Results:
-${JSON.stringify(results.slice(0, 3), null, 2)}
+${JSON.stringify(results.results.slice(0, 3), null, 2)}
 
 Extract 1-2 relevant factors. For each:
 FACTOR:
