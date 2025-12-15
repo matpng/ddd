@@ -112,7 +112,8 @@ class PAKEnabledDiscoveryDaemon:
         if isinstance(constraints, str):
             try:
                 constraints = json.loads(constraints)
-            except:
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.warning(f"Could not parse parameter_constraints as JSON: {e}")
                 constraints = {}
         
         params['step_size'] = constraints.get('step_size', 5)

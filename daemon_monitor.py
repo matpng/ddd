@@ -232,7 +232,8 @@ class DaemonMonitor:
         try:
             process = psutil.Process()
             return round(process.memory_info().rss / 1024 / 1024, 2)
-        except:
+        except Exception as e:
+            logger.warning(f"Could not get current memory: {e}")
             return 0.0
     
     def _get_current_cpu(self) -> float:
@@ -240,7 +241,8 @@ class DaemonMonitor:
         try:
             process = psutil.Process()
             return round(process.cpu_percent(interval=0.1), 2)
-        except:
+        except Exception as e:
+            logger.warning(f"Could not get current CPU: {e}")
             return 0.0
     
     def export_metrics(self, filepath: str):
