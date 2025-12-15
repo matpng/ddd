@@ -2513,7 +2513,7 @@ def get_discovery_paper_markdown(discovery_id):
 # @require_api_token(['read'])
 
 @app.route('/api/agi/metrics')
-@rate_limit
+@rate_limit()
 def agi_metrics():
     """
     AGI Integration: Runtime and business metrics for monitoring.
@@ -2556,7 +2556,7 @@ def agi_metrics():
 
 
 @app.route('/api/agi/health')
-@rate_limit
+@rate_limit()
 def agi_health():
     """
     AGI Integration: Detailed health check endpoint.
@@ -2598,7 +2598,7 @@ def agi_health():
 
 
 @app.route('/api/agi/code/<path:filepath>')
-@rate_limit
+@rate_limit()
 def agi_get_code(filepath):
     """
     AGI Integration: Retrieve source code file for analysis.
@@ -2636,7 +2636,7 @@ def agi_get_code(filepath):
 
 
 @app.route('/api/agi/system/stats')
-@rate_limit
+@rate_limit()
 def agi_system_stats():
     """
     AGI Integration: Comprehensive system statistics.
