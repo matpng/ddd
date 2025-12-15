@@ -38,6 +38,7 @@ from security_middleware import (
     rate_limit,
     validate_request
 )
+from api_auth import require_api_token  # Enable API authentication
 from prometheus_metrics import (
     setup_metrics,
     start_metrics_updater,
@@ -2508,12 +2509,12 @@ def get_discovery_paper_markdown(discovery_id):
 # ============================================================================
 # AGI INTEGRATION API ENDPOINTS
 # ============================================================================
-# Note: Authentication can be enabled by importing from api_auth:
-# from api_auth import require_api_token
-# @require_api_token(['read'])
+# Authenticated endpoints for AGI system integration
+# Requires API token with appropriate permissions
 
 @app.route('/api/agi/metrics')
 @rate_limit()
+@require_api_token(['read'])  # Require read permission
 def agi_metrics():
     """
     AGI Integration: Runtime and business metrics for monitoring.
@@ -2557,6 +2558,7 @@ def agi_metrics():
 
 @app.route('/api/agi/health')
 @rate_limit()
+@require_api_token(['read'])
 def agi_health():
     """
     AGI Integration: Detailed health check endpoint.
@@ -2599,6 +2601,7 @@ def agi_health():
 
 @app.route('/api/agi/code/<path:filepath>')
 @rate_limit()
+@require_api_token(['admin'])  # Require admin for code access
 def agi_get_code(filepath):
     """
     AGI Integration: Retrieve source code file for analysis.
@@ -2637,6 +2640,7 @@ def agi_get_code(filepath):
 
 @app.route('/api/agi/system/stats')
 @rate_limit()
+@require_api_token(['read'])
 def agi_system_stats():
     """
     AGI Integration: Comprehensive system statistics.
@@ -2685,7 +2689,10 @@ def agi_system_stats():
                 'daemon_running': daemon_status['running'],
                 'daemon_discoveries_today': daemon_status['discoveries_today'],
                 'daemon_total': daemon_status['total_discoveries'],
-                'uptime_hours': (datetime.now() - daemon_status.get('start_time', datetime.now())).total_seconds() / 3600
+                'uptime_hours': (
+                    (datetime.now() - daemon_status['start_time']).total_seconds() / 3600 
+                    if daemon_status.get('start_time') else 0
+                )
             },
             'configuration': {
                 'max_distance_pairs': Config.MAX_DISTANCE_PAIRS,
