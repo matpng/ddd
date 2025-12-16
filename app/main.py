@@ -30,15 +30,8 @@ import re
 # Import our modules
 from orion_octave_test import main as run_analysis
 from config import Config
-from discovery_manager import DiscoveryManager
-from daemon_monitor import daemon_monitor
-from ml_integration import initialize_ml_integration
-from security_middleware import (
-    initialize_security,
-    rate_limit,
-    validate_request
-)
 from api_auth import require_api_token  # Enable API authentication
+from security_middleware import initialize_security, rate_limit, validate_request
 from prometheus_metrics import (
     setup_metrics,
     start_metrics_updater,
@@ -46,6 +39,12 @@ from prometheus_metrics import (
 )
 import threading
 import time
+from app.extensions import (
+    analysis_cache,
+    discovery_manager,
+    ml_integration,
+    daemon_monitor
+)
 
 # Setup logging
 logging.basicConfig(
@@ -72,11 +71,7 @@ from app.routes.analysis import analysis_bp
 from app.extensions import analysis_cache
 app.register_blueprint(analysis_bp)
 
-# Initialize discovery manager
-discovery_manager = DiscoveryManager()
 
-# Initialize ML integration
-ml_integration = initialize_ml_integration(discovery_manager)
 
 # Autonomous daemon status
 daemon_status = {
