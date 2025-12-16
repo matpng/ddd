@@ -18,7 +18,7 @@ os.environ['TESTING'] = 'true'
 @pytest.fixture
 def app():
     """Create Flask app for testing"""
-    from app import app as flask_app
+    from app.main import app as flask_app
     flask_app.config['TESTING'] = True
     flask_app.config['CACHE_ENABLED'] = False
     yield flask_app

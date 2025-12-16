@@ -9,7 +9,7 @@ class TestLRUCache:
     
     def test_cache_creation(self):
         """Test cache can be created with max size"""
-        from app import LRUCache
+        from app.utils.cache import LRUCache
         
         cache = LRUCache(max_size=5)
         assert cache.max_size == 5
@@ -17,7 +17,7 @@ class TestLRUCache:
     
     def test_cache_set_and_get(self):
         """Test setting and getting values"""
-        from app import LRUCache
+        from app.utils.cache import LRUCache
         
         cache = LRUCache(max_size=3)
         cache.set("key1", "value1")
@@ -28,7 +28,7 @@ class TestLRUCache:
     
     def test_cache_lru_eviction(self):
         """Test LRU eviction when cache is full"""
-        from app import LRUCache
+        from app.utils.cache import LRUCache
         
         cache = LRUCache(max_size=2)
         cache.set("key1", "value1")
@@ -41,7 +41,7 @@ class TestLRUCache:
     
     def test_cache_get_updates_order(self):
         """Test that getting a key updates its position (LRU)"""
-        from app import LRUCache
+        from app.utils.cache import LRUCache
         
         cache = LRUCache(max_size=2)
         cache.set("key1", "value1")
@@ -59,7 +59,7 @@ class TestLRUCache:
     
     def test_cache_contains(self):
         """Test __contains__ method"""
-        from app import LRUCache
+        from app.utils.cache import LRUCache
         
         cache = LRUCache(max_size=3)
         cache.set("key1", "value1")
@@ -69,7 +69,7 @@ class TestLRUCache:
     
     def test_cache_getitem_setitem(self):
         """Test dictionary-style access"""
-        from app import LRUCache
+        from app.utils.cache import LRUCache
         
         cache = LRUCache(max_size=3)
         cache["key1"] = "value1"
@@ -79,7 +79,7 @@ class TestLRUCache:
     
     def test_cache_overwrite(self):
         """Test overwriting existing key"""
-        from app import LRUCache
+        from app.utils.cache import LRUCache
         
         cache = LRUCache(max_size=3)
         cache.set("key1", "value1")
@@ -90,7 +90,7 @@ class TestLRUCache:
     
     def test_cache_none_value(self):
         """Test caching None values"""
-        from app import LRUCache
+        from app.utils.cache import LRUCache
         
         cache = LRUCache(max_size=3)
         cache.set("key1", None)
